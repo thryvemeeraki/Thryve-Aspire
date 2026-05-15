@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline';">
+<title>Thryve Aspire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0d1b3e;
+  --navy-mid: #162550;
+  --navy-light: #1e3468;
+  --gold: #c9920a;
+  --gold-light: #e8b84b;
+  --gold-pale: #f5e6c0;
+  --cream: #fdf8ef;
+  --cream-dark: #f5edda;
+  --warm-white: #fffdf8;
+  --text-dark: #0d1b3e;
+  --text-mid: #3d4f7c;
+  --text-muted: #7a8ab0;
+  --border: rgba(13,27,62,0.12);
+  --border-gold: rgba(201,146,10,0.3);
+  --shadow-sm: 0 2px 12px rgba(13,27,62,0.08);
+  --shadow-md: 0 8px 32px rgba(13,27,62,0.14);
+  --shadow-lg: 0 20px 60px rgba(13,27,62,0.2);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--cream);
+  color:var(--text-dark);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* BACKGROUND PATTERN */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(201,146,10,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 80%, rgba(13,27,62,0.04) 0%, transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* LOGO MARK - SVG sunburst */
+.logo-mark svg{filter:drop-shadow(0 4px 12px rgba(201,146,10,0.3))}
+
+/* ===================== COUNSELLOR PANEL ===================== */
+#counsellor-panel{
+  position:relative;
+  z-index:1;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+.cp-header{
+  background:var(--navy);
+  padding:28px 48px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:var(--shadow-md);
+}
+
+.cp-header .brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.cp-header .brand-text h1{
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;
+  font-weight:600;
+  color:var(--warm-white);
+  letter-spacing:0.5px;
+  line-height:1;
+}
+.cp-header .brand-text p{
+  font-size:12px;
+  color:var(--gold-light);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-top:3px;
+}
+.cp-header .session-info{
+  font-size:13px;
+  color:var(--gold-pale);
+  opacity:0.7;
+  text-align:right;
+}
+
+.cp-body{
+  flex:1;
+  max-width:1100px;
+  margin:0 auto;
+  width:100%;
+  padding:40px 32px;
+}
+
+/* STATS ROW */
+.stats-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-bottom:32px;
+}
+.stat-card{
+  background:var(--warm-white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px 24px;
+  box-shadow:var(--shadow-sm);
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.stat-card .label{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:6px}
+.stat-card .value{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:var(--navy)}
+.stat-card .sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.stat-card.gold .value{color:var(--gold)}
+
+/* GENERATE FORM */
+.gen-section{
+  background:var(--warm-white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  overflow:hidden;
+  margin-bottom:32px;
+}
+.gen-section-header{
+  background:var(--navy);
+  padding:18px 28px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.gen-section-header h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;
+  font-weight:600;
+  color:var(--warm-white);
+}
+.gen-section-header p{font-size:13px;color:var(--gold-pale);opacity:0.8;margin-top:2px}
+.gen-form{padding:28px}
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:20px;
+}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:500;color:var(--text-mid);letter-spacing:0.5px;text-transform:uppercase}
+.field input,.field select{
+  padding:11px 14px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  color:var(--text-dark);
+  background:var(--cream);
+  transition:border-color 0.2s, box-shadow 0.2s;
+  outline:none;
+}
+.field input:focus,.field select:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(201,146,10,0.12);
+  background:var(--warm-white);
+}
+.field input::placeholder{color:var(--text-muted);font-size:13px}
+
+.btn-generate{
+  background:var(--navy);
+  color:var(--gold-light);
+  border:none;
+  padding:13px 32px;
+  border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  font-weight:500;
+  cursor:pointer;
+  display:flex;align-items:center;gap:10px;
+  transition:all 0.25s;
+  position:relative;
+  overflow:hidden;
+  letter-spacing:0.3px;
+}
+.btn-generate::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,transparent 40%,rgba(201,146,10,0.15) 100%);
+  opacity:0;
+  transition:opacity 0.25s;
+}
+.btn-generate:hover{background:var(--navy-light);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-generate:hover::before{opacity:1}
+.btn-generate:active{transform:translateY(0)}
+.btn-generate:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+/* LINKS TABLE */
+.links-section{
+  background:var(--warm-white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  overflow:hidden;
+}
+.links-header{
+  padding:18px 28px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.links-header h2{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:600;color:var(--navy);
+}
+.links-list{padding:0}
+.link-row{
+  padding:16px 28px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+  transition:background 0.15s;
+  animation:fadeIn 0.35s ease;
+}
+.link-row:last-child{border-bottom:none}
+.link-row:hover{background:var(--cream)}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+.student-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--navy);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;font-weight:600;color:var(--gold-light);
+  flex-shrink:0;
+}
+.link-info{flex:1;min-width:0}
+.link-info .name{font-weight:500;font-size:14px;color:var(--text-dark)}
+.link-info .meta{font-size:12px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.link-code{
+  font-family:monospace;
+  font-size:13px;
+  background:var(--cream-dark);
+  padding:5px 10px;
+  border-radius:6px;
+  color:var(--navy-mid);
+  letter-spacing:1px;
+  border:1px solid var(--border);
+  flex-shrink:0;
+}
+.status-pill{
+  font-size:11px;font-weight:500;
+  padding:4px 10px;
+  border-radius:20px;
+  flex-shrink:0;
+  text-transform:uppercase;
+  letter-spacing:0.8px;
+}
+.status-active{background:rgba(201,146,10,0.1);color:var(--gold);border:1px solid rgba(201,146,10,0.25)}
+.status-used{background:rgba(13,27,62,0.06);color:var(--text-mid);border:1px solid var(--border)}
+.status-completed{background:rgba(16,100,58,0.08);color:#10643a;border:1px solid rgba(16,100,58,0.2)}
+
+.btn-copy{
+  background:none;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:7px 12px;
+  font-size:12px;font-weight:500;
+  color:var(--text-mid);
+  cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:all 0.2s;
+  flex-shrink:0;
+}
+.btn-copy:hover{background:var(--navy);color:var(--gold-light);border-color:var(--navy)}
+.btn-copy.copied{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+
+.empty-state{
+  padding:48px;text-align:center;color:var(--text-muted);
+}
+.empty-state svg{opacity:0.25;margin-bottom:12px}
+.empty-state p{font-size:14px}
+
+/* ===================== STUDENT ASSESSMENT ===================== */
+#student-panel{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:100;
+  overflow-y:auto;
+  background:var(--cream);
+}
+
+.sp-header{
+  background:var(--navy);
+  padding:20px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+  box-shadow:var(--shadow-md);
+}
+.sp-header .brand{display:flex;align-items:center;gap:12px}
+.sp-header .brand h1{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:600;color:var(--warm-white);
+}
+.sp-progress-bar{
+  flex:1;max-width:320px;margin:0 32px;
+}
+.sp-progress-bar .label{font-size:11px;color:var(--gold-pale);opacity:0.7;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;display:flex;justify-content:space-between}
+.sp-progress-track{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
+.sp-progress-fill{height:3px;background:var(--gold-light);border-radius:2px;transition:width 0.4s ease}
+
+.sp-student-chip{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:24px;
+  padding:6px 14px 6px 8px;
+  display:flex;align-items:center;gap:8px;
+}
+.sp-student-chip .avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;color:var(--navy);
+}
+.sp-student-chip .sname{font-size:13px;color:var(--warm-white)}
+
+.sp-body{max-width:800px;margin:0 auto;padding:40px 32px 80px}
+
+/* SECTION TABS */
+.section-tabs{
+  display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:28px;
+  scrollbar-width:none;
+}
+.section-tabs::-webkit-scrollbar{display:none}
+.sec-tab{
+  flex-shrink:0;
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:12px;font-weight:500;
+  cursor:pointer;
+  border:1.5px solid var(--border);
+  background:var(--warm-white);
+  color:var(--text-muted);
+  transition:all 0.2s;
+  display:flex;align-items:center;gap:5px;
+  letter-spacing:0.3px;
+}
+.sec-tab:hover{border-color:var(--gold);color:var(--navy)}
+.sec-tab.active{background:var(--navy);color:var(--gold-light);border-color:var(--navy)}
+.sec-tab.done{background:rgba(16,100,58,0.07);color:#10643a;border-color:rgba(16,100,58,0.2)}
+
+/* QUESTION CARD */
+.section-card{
+  background:var(--warm-white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.section-card-header{
+  padding:20px 28px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);
+}
+.section-card-header .cat-tag{
+  font-size:10px;text-transform:uppercase;letter-spacing:2px;
+  color:var(--gold-light);opacity:0.8;margin-bottom:4px;
+}
+.section-card-header h3{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:600;color:var(--warm-white);
+}
+.section-card-body{padding:28px}
+
+.question-block{
+  margin-bottom:24px;
+  padding-bottom:24px;
+  border-bottom:1px solid var(--border);
+}
+.question-block:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.q-num{
+  display:inline-block;width:22px;height:22px;
+  background:var(--navy);color:var(--gold-light);
+  border-radius:50%;font-size:11px;font-weight:600;
+  text-align:center;line-height:22px;margin-right:8px;flex-shrink:0;
+}
+.q-text{font-size:14px;line-height:1.65;color:var(--text-dark);margin-bottom:12px;display:flex;align-items:flex-start;gap:0}
+
+.options-list{display:flex;flex-direction:column;gap:7px}
+.opt-label{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 14px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  cursor:pointer;
+  transition:all 0.18s;
+  background:var(--cream);
+}
+.opt-label:hover{border-color:var(--gold-light);background:var(--gold-pale)}
+.opt-label.selected{border-color:var(--gold);background:rgba(201,146,10,0.06)}
+.opt-label input[type=radio]{accent-color:var(--gold);margin-top:2px;flex-shrink:0}
+.opt-label span{font-size:13.5px;line-height:1.5;color:var(--text-dark)}
+.opt-label.selected span{color:var(--navy-mid);font-weight:500}
+
+.text-inp{
+  width:100%;padding:10px 14px;
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text-dark);
+  background:var(--cream);outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+}
+.text-inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,146,10,0.1);background:var(--warm-white)}
+
+/* NAV BUTTONS */
+.section-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 28px;
+  border-top:1px solid var(--border);
+  background:var(--warm-white);
+}
+.btn-nav{
+  padding:10px 22px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+  cursor:pointer;background:var(--warm-white);color:var(--text-mid);
+  display:flex;align-items:center;gap:8px;
+  transition:all 0.2s;
+}
+.btn-nav:hover{border-color:var(--navy);color:var(--navy)}
+.btn-nav:disabled{opacity:0.3;cursor:not-allowed}
+.btn-submit{
+  background:var(--navy);color:var(--gold-light);
+  border:none;padding:11px 28px;border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+  cursor:pointer;display:flex;align-items:center;gap:8px;
+  transition:all 0.25s;letter-spacing:0.3px;
+}
+.btn-submit:hover{background:var(--navy-light);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-submit:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+/* SUCCESS SCREEN */
+.success-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:70vh;text-align:center;padding:40px;
+}
+.success-icon{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,var(--navy),var(--navy-light));
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:24px;
+  box-shadow:var(--shadow-md);
+}
+.success-screen h2{
+  font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;
+  color:var(--navy);margin-bottom:12px;
+}
+.success-screen p{font-size:15px;color:var(--text-muted);max-width:400px;line-height:1.7}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:var(--navy);color:var(--gold-light);
+  padding:12px 20px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:500;
+  box-shadow:var(--shadow-lg);
+  animation:slideUp 0.3s ease;
+  max-width:320px;
+  display:flex;align-items:center;gap:10px;
+  border-left:3px solid var(--gold);
+}
+.toast.error{background:#3d0f0f;color:#ffb3b3;border-left-color:#e05252}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* SECURITY BADGE */
+.security-notice{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--text-muted);
+  margin-top:16px;padding:10px 14px;
+  background:rgba(13,27,62,0.03);
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+}
+
+/* INTEGRATION NOTE */
+.int-note{
+  margin-top:28px;
+  padding:18px 22px;
+  background:var(--navy);
+  border-radius:var(--radius-sm);
+  display:flex;align-items:flex-start;gap:12px;
+}
+.int-note p{font-size:13px;color:var(--gold-pale);opacity:0.85;line-height:1.6}
+.int-note strong{color:var(--gold-light);font-weight:500}
+
+/* SUNBURST SVG LOGO */
+.sunburst{width:44px;height:44px}
+
+/* RESPONSIVE */
+@media(max-width:720px){
+  .cp-header{padding:18px 20px}
+  .cp-body{padding:24px 16px}
+  .form-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .sp-progress-bar{display:none}
+  .sp-body{padding:24px 16px 80px}
+  .gen-form,.section-card-body,.section-nav{padding:18px}
+  .link-code{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ COUNSELLOR PANEL ============ -->
+<div id="counsellor-panel">
+  <header class="cp-header">
+    <div class="brand">
+      <!-- Sunburst Logo -->
+      <div class="logo-mark">
+        <svg class="sunburst" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(40,40)">
+            <!-- Rays -->
+            <g opacity="0.9">
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(0)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(26)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(52)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(78)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(104)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(130)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(156)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(182)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(208)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(234)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(260)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(286)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(312)"/>
+              <rect x="-5" y="-38" width="10" height="22" rx="3" fill="#c9920a" transform="rotate(338)"/>
+            </g>
+            <!-- Center dot -->
+            <circle r="9" fill="#e8b84b"/>
+            <circle r="5" fill="#c9920a"/>
+          </g>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Thryve Aspire</h1>
+        <p>Counsellor Dashboard</p>
+      </div>
+    </div>
+    <div class="session-info" id="session-clock"></div>
+  </header>
+
+  <div class="cp-body">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="label">Total Links</div>
+        <div class="value" id="stat-total">0</div>
+        <div class="sub">generated this session</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="label">Active</div>
+        <div class="value" id="stat-active">0</div>
+        <div class="sub">awaiting student</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Completed</div>
+        <div class="value" id="stat-completed">0</div>
+        <div class="sub">assessments done</div>
+      </div>
+    </div>
+
+    <!-- Generate Form -->
+    <div class="gen-section">
+      <div class="gen-section-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8b84b" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <div>
+          <h2>Generate Secure Assessment Link</h2>
+          <p>Each link is one-time use, signed, and expires after completion</p>
+        </div>
+      </div>
+      <div class="gen-form">
+        <div class="form-grid">
+          <div class="field">
+            <label>Student Full Name <span style="color:var(--gold)">*</span></label>
+            <input type="text" id="f-name" placeholder="e.g. Priya Sharma" autocomplete="off" maxlength="80">
+          </div>
+          <div class="field">
+            <label>Grade / Class <span style="color:var(--gold)">*</span></label>
+            <input type="text" id="f-grade" placeholder="e.g. Grade 12 / Class XII" autocomplete="off" maxlength="30">
+          </div>
+          <div class="field">
+            <label>Student Email</label>
+            <input type="email" id="f-email" placeholder="student@school.edu" autocomplete="off" maxlength="100">
+          </div>
+          <div class="field">
+            <label>Counsellor Note (internal)</label>
+            <input type="text" id="f-note" placeholder="Optional reference note" maxlength="100">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <button class="btn-generate" onclick="generateLink()" id="btn-gen">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Generate Secure Link
+          </button>
+          <div class="security-notice">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Link is signed with HMAC · One-time use · Auto-expires on completion
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Links List -->
+    <div class="links-section">
+      <div class="links-header">
+        <h2>Generated Links</h2>
+        <span style="font-size:13px;color:var(--text-muted)" id="links-count">0 links</span>
+      </div>
+      <div id="links-list">
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <p>No links generated yet. Fill the form above to get started.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="int-note">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e8b84b" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div style="flex:1">
+        <p>To activate Google Sheets sync and PDF email reports to <strong>thryvemeeraki@gmail.com</strong>, replace <strong>YOUR_DEPLOYMENT_ID</strong> in the source with your Google Apps Script deployment ID.</p>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:12px;flex-wrap:wrap">
+          <button id="btn-test" onclick="testConnection()" style="background:rgba(232,184,75,0.15);border:1px solid rgba(232,184,75,0.4);color:#e8b84b;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg> Test connection
+          </button>
+          <span id="test-out" style="font-size:13px;font-weight:500"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STUDENT ASSESSMENT PANEL ============ -->
+<div id="student-panel">
+  <header class="sp-header">
+    <div class="brand">
+      <svg class="sunburst" viewBox="0 0 80 80" width="36" height="36" fill="none">
+        <g transform="translate(40,40)">
+          <g opacity="0.85">
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(0)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(26)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(52)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(78)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(104)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(130)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(156)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(182)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(208)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(234)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(260)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(286)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(312)"/>
+            <rect x="-4" y="-32" width="8" height="18" rx="2.5" fill="#e8b84b" transform="rotate(338)"/>
+          </g>
+          <circle r="7" fill="#e8b84b"/>
+          <circle r="4" fill="#c9920a"/>
+        </g>
+      </svg>
+      <h1>Thryve Aspire</h1>
+    </div>
+    <div class="sp-progress-bar">
+      <div class="label"><span>Progress</span><span id="sp-pct">0%</span></div>
+      <div class="sp-progress-track"><div class="sp-progress-fill" id="sp-fill" style="width:0%"></div></div>
+    </div>
+    <div class="sp-student-chip">
+      <div class="avatar" id="sp-avatar">—</div>
+      <span class="sname" id="sp-name">Student</span>
+    </div>
+  </header>
+
+  <div class="sp-body" id="sp-body">
+    <!-- Injected dynamically -->
+  </div>
+</div>
+
+<script>
+// ============================
+// SECURITY CONFIGURATION
+// STEP 1 — Set these two values before deploying.
+// These must EXACTLY match the values in your Apps Script.
+// ============================
+
+// Your Google Apps Script deployment URL
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIT2-4c10XgsrymP5BXdYwzkYIjohX4DYfOWYUvXqQXALzyhA9AjSjkfN76zeSZpn9Vg/exec";
+
+// A shared secret known only to you — used to sign every token
+// and authenticate every request to the sheet.
+// Rules: min 32 characters, mix of letters/numbers/symbols.
+// Example: "Ta#9xK2!mRvQ7@nLp3$wBz6&Yd8^Cf1J"
+// DO NOT use the example above — set your own unique one.
+// This MUST match SHARED_SECRET in your Apps Script exactly.
+const SHARED_SECRET = "ve61887763-cd68-4d6f-9dc0-8a2d58b6699cas";
+
+// Token expiry: how many days a generated link stays valid (default 7)
+const TOKEN_EXPIRY_DAYS = 7;
+
+// ============================
+// SECURITY UTILITIES
+// ============================
+
+// Derives a strong signing key from SHARED_SECRET using PBKDF2
+// so even if the JS is read, brute-forcing the secret is hard
+async function deriveKey(purpose) {
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey(
+    "raw", enc.encode(SHARED_SECRET),
+    { name: "PBKDF2" }, false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: enc.encode("thryve-aspire-" + purpose), iterations: 100000, hash: "SHA-256" },
+    baseKey, { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]
+  );
+}
+
+async function hmacSign(data) {
+  const enc = new TextEncoder();
+  const key = await deriveKey("token");
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
+  return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,24);
+}
+
+async function hmacVerify(data, sig) {
+  const expected = await hmacSign(data);
+  // Constant-time comparison — prevents timing attacks
+  if (expected.length !== sig.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
+  return diff === 0;
+}
+
+// Generates a request auth value using plain HMAC-SHA256
+// This matches Utilities.computeHmacSha256Signature() in Apps Script exactly
+async function makeRequestAuth(action, tokenId, ts) {
+  const windowNum = Math.floor((ts || Date.now()) / 300000);
+  const msg = action + ":" + (tokenId || "") + ":" + windowNum;
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", enc.encode(SHARED_SECRET + "-api"),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(msg));
+  return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,32);
+}
+
+function b64encode(str) {
+  return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+function b64decode(str) {
+  str = str.replace(/-/g,'+').replace(/_/g,'/');
+  while(str.length%4) str+='=';
+  return decodeURIComponent(escape(atob(str)));
+}
+
+function sanitize(str) {
+  // Strip HTML tags, script injections, control chars
+  return String(str)
+    .replace(/<[^>]*>/g,'')          // strip HTML tags
+    .replace(/[<>"'`\\]/g,'')        // strip dangerous chars
+    .replace(/javascript:/gi,'')     // strip JS protocol
+    .replace(/on\w+\s*=/gi,'')       // strip event handlers
+    .replace(/[\x00-\x1F\x7F]/g,'') // strip control chars
+    .trim().slice(0,300);
+}
+
+function sanitizeShort(str) {
+  return sanitize(str).slice(0,100);
+}
+
+function validateEmail(email) {
+  if (!email) return true; // optional field
+  // RFC-5321 compliant check
+  return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(email) && email.length <= 254;
+}
+
+// Rate limiting: max 10 links per 10 minutes per browser
+function checkRateLimit() {
+  const key = 'ta_rl_v2';
+  const now = Date.now();
+  let rl;
+  try { rl = JSON.parse(localStorage.getItem(key) || '{"t":0,"c":0}'); } catch { rl = {t:0,c:0}; }
+  if (now - rl.t > 600000) { rl = {t:now,c:0}; }
+  if (rl.c >= 10) return false;
+  rl.c++;
+  try { localStorage.setItem(key, JSON.stringify(rl)); } catch {}
+  return true;
+}
+
+// Checks SHARED_SECRET is configured before allowing any operation
+function checkSecretConfigured() {
+  if (!SHARED_SECRET || SHARED_SECRET.startsWith("REPLACE_") || SHARED_SECRET.length < 32) {
+    showToast("Setup required: please set SHARED_SECRET and APPS_SCRIPT_URL in the source file.", "error");
+    return false;
+  }
+  return true;
+}
+
+// ============================
+// QUESTIONNAIRE DATA
+// ============================
+const SECTIONS = [
+  {id:"s1",title:"Unique Personality Assessment",cat:"Self-Discovery & Purpose",qs:[
+    {id:"s1q1",t:"You're invited to a weekend social event. What excites you most?",o:["Meeting new people and enjoying the lively atmosphere.","Spending quality time with a few close friends."]},
+    {id:"s1q2",t:"When working on a project, how do you prefer to engage?",o:["In a collaborative environment with group discussions.","Independently, focusing on deep work without distractions."]},
+    {id:"s1q3",t:"In a new environment, how do you navigate?",o:["Explore every corner and talk to people immediately.","Observe quietly and take my time to adjust."]},
+    {id:"s1q4",t:"Your idea of a perfect evening is:",o:["Going out and experiencing something new.","Staying in with a book or a hobby."]},
+    {id:"s1q5",t:"How do you recharge after a long day?",o:["Spending time in social settings.","Having quiet alone time."]},
+    {id:"s1q6",t:"Do you prefer:",o:["Leading discussions and brainstorming ideas.","Reflecting and analyzing situations privately."]},
+    {id:"s1q7",t:"When in a group, you usually:",o:["Speak up and share my ideas freely.","Listen carefully and contribute thoughtfully."]},
+    {id:"s1q8",t:"When learning something new, do you prefer:",o:["Practical applications and real-world examples.","Abstract concepts and exploring possibilities."]},
+    {id:"s1q9",t:"In decision-making, do you rely more on:",o:["Facts and proven methods.","Gut feeling and creative ideas."]},
+    {id:"s1q10",t:"You prefer planning your future:",o:["With step-by-step actionable goals.","By following where life takes you."]},
+    {id:"s1q11",t:"When solving a problem, do you:",o:["Follow traditional methods that have worked before.","Think outside the box and try new approaches."]},
+    {id:"s1q12",t:"You enjoy subjects that are:",o:["Practical and grounded in reality.","Theoretical and open-ended."]},
+    {id:"s1q13",t:"When making plans, you:",o:["Prefer having clear details and structure.","Enjoy flexibility and spontaneous decisions."]},
+    {id:"s1q14",t:"Your strength lies in:",o:["Working with known facts and logic.","Imagining possibilities and future scenarios."]},
+    {id:"s1q15",t:"When faced with a tough decision, do you:",o:["Use logic and objective analysis.","Consider people's feelings and relationships."]},
+    {id:"s1q16",t:"At work or school, what matters more to you?",o:["Achieving results and meeting objectives.","Ensuring harmony and well-being of everyone involved."]},
+    {id:"s1q17",t:"How do you prefer to handle conflicts?",o:["By addressing the issue logically and finding solutions.","By considering emotions and finding compromises."]},
+    {id:"s1q18",t:"What motivates you more?",o:["Recognition for achievements.","Making a positive impact on others."]},
+    {id:"s1q19",t:"When making choices, do you:",o:["Follow your head and analyze facts.","Follow your heart and values."]},
+    {id:"s1q20",t:"You prioritize:",o:["Efficiency and productivity.","Relationships and collaboration."]},
+    {id:"s1q21",t:"Success means:",o:["Achieving tangible goals and progress.","Creating meaningful experiences and relationships."]},
+    {id:"s1q22",t:"How do you approach deadlines?",o:["Work steadily and finish ahead of time.","Work best under pressure with last-minute efforts."]},
+    {id:"s1q23",t:"Your approach to organizing tasks is:",o:["Structured and planned in advance.","Flexible and adaptable to changes."]},
+    {id:"s1q24",t:"In your daily routine, do you prefer:",o:["A well-structured schedule.","A relaxed and spontaneous flow."]},
+    {id:"s1q25",t:"When traveling, do you:",o:["Plan everything in advance.","Enjoy spontaneous adventures."]},
+    {id:"s1q26",t:"In handling challenges, you prefer:",o:["Sticking to tried-and-tested methods.","Adapting and experimenting along the way."]},
+    {id:"s1q27",t:"What describes you best?",o:["Organized and disciplined.","Flexible and open-minded."]},
+    {id:"s1q28",t:"You are most productive when:",o:["Following a detailed to-do list.","Allowing yourself room for creativity."]}
+  ]},
+  {id:"s2",title:"Life Transition Readiness",cat:"Self-Discovery & Purpose",qs:[
+    {id:"s2q1",t:"You're moving to a new city for college. What's your first step?",o:["Plan every detail in advance, from accommodation to daily routines.","Take it one step at a time and explore as you go."]},
+    {id:"s2q2",t:"If you face a problem adjusting to new cultural norms, what do you do?",o:["Seek help from mentors or student groups.","Observe and adapt gradually to the new environment."]},
+    {id:"s2q3",t:"What drives your choice of academic program and career path?",o:["A structured roadmap based on research and expert advice.","My inner passions and evolving interests."]},
+    {id:"s2q4",t:"When feeling homesick, what would comfort you the most?",o:["Calling family and friends frequently.","Engaging in new activities to stay distracted."]},
+    {id:"s2q5",t:"Given multiple career options aligned with your strengths, how do you choose?",o:["Evaluate each based on long-term security and stability.","Pursue what excites and motivates me the most."]},
+    {id:"s2q6",t:"Balancing academics and social life in college seems challenging. What's your plan?",o:["Set clear priorities and follow a routine.","Go with the flow and balance as opportunities come."]},
+    {id:"s2q7",t:"If facing a stressful situation in college, how would you cope?",o:["Seek professional or peer support immediately.","Try to manage stress independently first."]},
+    {id:"s2q8",t:"Invited to multiple college clubs. How do you decide which ones to join?",o:["Evaluate based on career goals and interests.","Try out a few and decide later."]},
+    {id:"s2q9",t:"You have free time between classes. How do you usually spend it?",o:["Catching up on studies or planning ahead.","Socialising and exploring new hobbies."]},
+    {id:"s2q10",t:"A sudden change in college schedule disrupts your plans. How do you react?",o:["Quickly reorganise and adapt.","Take time to adjust and find new strategies."]},
+    {id:"s2q11",t:"When faced with competing priorities, how do you decide?",o:["Follow a pre-set plan and adjust as needed.","Rely on intuition and current priorities."]},
+    {id:"s2q12",t:"What inspires you the most in your journey to college?",o:["Achieving financial and career success.","Personal growth and making a meaningful impact."]}
+  ]},
+  {id:"s3",title:"Astrological Insights",cat:"Astrological & Numerological",qs:[
+    {id:"s3q1",t:"Date of birth (for astrological analysis):",type:"date"},
+    {id:"s3q2",t:"Birth time, if known (optional):",type:"time"},
+    {id:"s3q3",t:"Place of birth:",type:"text"},
+    {id:"s3q4",t:"Which career theme resonates most with you?",o:["Leadership and authority roles","Creative and artistic pursuits","Service-oriented and helping others","Intellectual and research-driven work","Entrepreneurship and innovation"]},
+    {id:"s3q5",t:"What life area feels most important right now?",o:["Career and professional growth","Relationships and personal connections","Personal freedom and exploration","Stability and security","Spiritual and inner development"]}
+  ]},
+  {id:"s4",title:"Numerological Guidance",cat:"Astrological & Numerological",qs:[
+    {id:"s4q1",t:"Full name at birth:",type:"text"},
+    {id:"s4q2",t:"Which number resonates most with you?",o:["1 – Leadership and independence","2 – Cooperation and balance","3 – Creativity and expression","4 – Structure and discipline","5 – Freedom and adventure","6 – Harmony and responsibility","7 – Analysis and wisdom","8 – Ambition and success","9 – Compassion and completion"]},
+    {id:"s4q3",t:"Your life path feels most aligned with:",o:["Building something lasting","Helping and supporting others","Exploring and discovering new things","Creating and expressing ideas","Leading and influencing change"]}
+  ]},
+  {id:"s6",title:"College & Course Exploration",cat:"Career Exploration",qs:[
+    {id:"s6q1",t:"Which academic subjects do you enjoy most?",o:["Science and technology","Arts, humanities and languages","Business and economics","Social sciences and psychology","Health and life sciences"]},
+    {id:"s6q2",t:"What kind of work environment do you see yourself in?",o:["Office or corporate setting","Outdoors or in the field","Laboratory or research facility","Creative studio or workshop","Community or social service setting"]},
+    {id:"s6q3",t:"How important is financial stability in your career choice?",o:["Extremely important — it's my top priority","Important but balanced with passion","Somewhat important — passion comes first","Not very important — I follow my calling"]},
+    {id:"s6q4",t:"What would you most like your career to achieve?",o:["Make a lot of money","Make a positive difference in people's lives","Create something new or innovative","Gain recognition and prestige","Achieve personal fulfilment and growth"]},
+    {id:"s6q5",t:"Have you researched colleges or courses yet?",o:["Yes, extensively","Somewhat — I have a few options in mind","A little bit","Not yet"]},
+    {id:"s6q6",t:"What type of college experience appeals to you?",o:["Large university with many resources","Small college with close community","Online or hybrid learning","Vocational or technical institute","I'm not sure yet"]}
+  ]},
+  {id:"s7",title:"Family & Social Influence",cat:"Influence & Environment",qs:[
+    {id:"s7q1",t:"How much does your family influence your career decisions?",o:["A great deal — I follow their guidance closely","Moderately — I consider their input but decide myself","Slightly — I listen but chart my own path","Not at all — I make fully independent decisions"]},
+    {id:"s7q2",t:"Do your close friends share similar career aspirations?",o:["Yes, very similar","Somewhat similar","Quite different","I'm not sure"]},
+    {id:"s7q3",t:"Has a mentor or role model influenced your career thinking?",o:["Yes, significantly","Yes, somewhat","A little","No mentor yet"]},
+    {id:"s7q4",t:"How do you handle it when family expectations differ from your goals?",o:["I try to align both as much as possible","I advocate respectfully for my own path","I tend to go with family expectations","I feel conflicted and unsure"]},
+    {id:"s7q5",t:"What role does social media play in shaping your career ideas?",o:["Very important — I discover careers through it","Somewhat important","Minor influence","I avoid using social media for this"]}
+  ]},
+  {id:"s9",title:"Stress Management & Emotional Readiness",cat:"Emotional Wellness",qs:[
+    {id:"s9q1",t:"When under significant stress, what do you typically do first?",o:["Talk to someone I trust","Take time alone to reflect","Exercise or do something physical","Distract myself with entertainment","Try to solve the source of stress directly"]},
+    {id:"s9q2",t:"How often do you feel overwhelmed by academic or personal pressures?",o:["Very often","Sometimes","Rarely","Almost never"]},
+    {id:"s9q3",t:"How well do you bounce back from setbacks or failures?",o:["Very well — I recover quickly","Fairly well with some time","It takes me a while","I struggle to recover easily"]},
+    {id:"s9q4",t:"Your emotional response when facing major change?",o:["I feel excited and energised","I feel cautiously optimistic","I feel anxious but manage it","I feel very anxious or resistant"]},
+    {id:"s9q5",t:"Do you have strategies or routines that help manage your mental wellbeing?",o:["Yes, well-established routines","Some strategies but inconsistently applied","A few ideas but nothing solid","Not really"]},
+    {id:"s9q6",t:"How comfortable are you asking for help when struggling emotionally?",o:["Very comfortable","Somewhat comfortable","A bit uncomfortable","Very uncomfortable"]}
+  ]},
+  {id:"s10",title:"Practical Life Skills & Financial Planning",cat:"Life Skills",qs:[
+    {id:"s10q1",t:"You receive your first monthly stipend. What do you do first?",o:["Create a budget — allocate for necessities, savings, and leisure.","Spend on things I need right away and manage the rest later.","Spend most on things I want and worry about savings later."]},
+    {id:"s10q2",t:"Your expense tracker shows you're overspending. What next?",o:["Review spending, cut non-essentials, and adjust budget.","Ignore it and hope the next month balances out.","Borrow from a friend and repay later."]},
+    {id:"s10q3",t:"A financial emergency arises. How do you handle it?",o:["Use your emergency fund or seek a structured loan.","Sell non-essential items to cover costs.","Panic and make impulsive financial decisions."]},
+    {id:"s10q4",t:"You have multiple tasks due on the same day. How do you manage?",o:["Prioritise by urgency and importance, then work systematically.","Start with the easiest tasks first.","Procrastinate and rush through everything last minute."]},
+    {id:"s10q5",t:"How do you handle deadline pressure?",o:["Use the extra time to improve work.","Submit as planned.","Procrastinate and delay submission."]},
+    {id:"s10q6",t:"When given independence in a new environment, what is your approach?",o:["Create a daily routine.","Learn through trial and error.","Struggle and call for frequent help."]},
+    {id:"s10q7",t:"How do you approach career decisions involving trade-offs?",o:["Choose lower pay for growth opportunities.","Negotiate salary.","Prioritise higher salary only."]},
+    {id:"s10q8",t:"When unexpected accommodation issues arise, you:",o:["Stay calm and find alternative housing.","Stress out but adapt.","Give up and go back home."]}
+  ]},
+  {id:"s11",title:"Goal-Setting Strategies",cat:"Life Skills",qs:[
+    {id:"s11q1",t:"A scholarship deadline is three months away. How do you approach it?",o:["Break requirements into small tasks and work regularly.","Wait until the last week and rush.","Assume you won't qualify and don't apply.","Ask a friend to remind you and decide later."]},
+    {id:"s11q2",t:"Your friend talks about their dream college but you haven't thought about yours. You:",o:["Research different career paths and colleges.","Wait and see what options are available later.","Ask your parents to choose for you.","Avoid thinking about it because it feels overwhelming."]},
+    {id:"s11q3",t:"An important exam is in two months but your favourite show just released a new season. You:",o:["Set a study plan first, then allow time for the show as a reward.","Watch episodes first, then study whenever.","Binge-watch the entire season and study later.","Stop studying and enjoy the show stress-free."]},
+    {id:"s11q4",t:"Your math grade was lower than expected. What's your next step?",o:["Review mistakes, seek teacher help, and adjust methods.","Feel discouraged and stop putting effort into math.","Blame test difficulty and wait for the next one.","Ignore it and focus on subjects you're already good at."]},
+    {id:"s11q5",t:"You're interested in a leadership camp but nervous about applying. What do you do?",o:["Push yourself out of your comfort zone and apply.","Wait to see if your friends apply first.","Decide against it because you might not get selected.","Ignore it because it sounds stressful."]},
+    {id:"s11q6",t:"You set a goal to wake up early and exercise but keep hitting snooze. What next?",o:["Adjust your bedtime and set small milestones.","Give up and stop trying to wake up early.","Keep setting alarms hoping it will eventually work.","Wait for motivation to return before trying again."]},
+    {id:"s11q7",t:"Your teacher suggests using a planner. How do you respond?",o:["Try using one and see if it helps.","Think about it but don't follow through.","Ignore it and rely on memory.","Assume it's too much effort and not worth it."]},
+    {id:"s11q8",t:"Your friend loses interest in a shared reading goal halfway through. What do you do?",o:["Continue your goal and encourage your friend to restart.","Stop reading too since they quit.","Change your goal to match theirs.","Lose motivation and forget about the goal."]},
+    {id:"s11q9",t:"You start a vision board but stop updating it after a few weeks. Your approach:",o:["Schedule time each month to review and update your goals.","Leave it and look at it occasionally.","Throw it away since you're not keeping up.","Forget about it and move on."]},
+    {id:"s11q10",t:"Your counsellor asks you to list three personal and three academic goals. You:",o:["Thoughtfully write down specific, achievable goals.","Write something generic just to complete the task.","Leave the paper blank because you're unsure.","Copy a friend's goals without thinking."]}
+  ]},
+  {id:"s12",title:"Lifelong Learning & Growth Mindset",cat:"Life Skills",qs:[
+    {id:"s12q1",t:"Your teacher introduces a difficult topic. Your response:",o:["Stay curious, ask questions, and explore extra resources.","Try to memorise the basics without fully understanding.","Assume it's too hard and wait for the teacher to re-explain.","Give up and stop paying attention."]},
+    {id:"s12q2",t:"An online coding course is harder than expected. You:",o:["Break lessons into smaller parts and practice consistently.","Skip the hard topics and only focus on easy ones.","Drop out and look for something simpler.","Complain about difficulty and stop trying."]},
+    {id:"s12q3",t:"Your school introduces more self-study. How do you react?",o:["Embrace the challenge and develop a new study routine.","Struggle at first but try to adjust slowly.","Wait and hope things go back to the old way.","Feel frustrated and stop engaging in lessons."]},
+    {id:"s12q4",t:"Your friend performs better than you and you feel discouraged. What do you do?",o:["Observe their study methods and try to learn from them.","Accept you may never be as good and stop trying hard.","Feel jealous and compare yourself negatively.","Ignore studies because competing feels pointless."]},
+    {id:"s12q5",t:"The school library adds books on space, AI, and psychology. What do you do?",o:["Pick up a book and explore a new subject.","Stick to books directly related to current subjects.","Avoid exploring because you think it's unnecessary.","Think about it but never actually do it."]},
+    {id:"s12q6",t:"You meet someone who speaks multiple languages and travels the world. This makes you feel:",o:["Inspired to learn something new.","Curious but unsure where to start.","Uninterested because it doesn't affect your current life.","Intimidated and convinced learning new skills is too hard."]},
+    {id:"s12q7",t:"You come across a completely new topic online. What do you do?",o:["Look it up, read about it, and try to understand the basics.","Think it's interesting but don't explore it further.","Ignore it because it's not related to your studies.","Feel uninterested and move on."]},
+    {id:"s12q8",t:"Your school offers a free online course on an interesting but off-syllabus topic. You:",o:["Sign up and explore it because learning is valuable.","Wait to see if your friends join first.","Ignore it since it won't affect grades.","Assume it will be boring and skip it."]},
+    {id:"s12q9",t:"Your teacher asks you to write a letter to your future self. How do you approach it?",o:["Write meaningful goals and dreams to reflect on later.","Write something quickly just to complete the task.","Copy what others are writing.","Don't take it seriously and write something random."]},
+    {id:"s12q10",t:"You are given the chance to shadow a professional for a day. You:",o:["Grab the opportunity and ask as many questions as possible.","Attend but stay quiet because you feel nervous.","Avoid it because you don't think it will be useful now.","Let someone else take the opportunity instead."]},
+    {id:"s12q11",t:"Your school encourages setting personal development goals. Your approach:",o:["Set clear personal and academic goals to improve yourself.","Set goals but don't really track them.","Feel uninterested because you don't see the point.","Ignore goal-setting because it feels like extra work."]}
+  ]}
+];
+
+// ============================
+// STATE
+// ============================
+let state = {
+  links: [],
+  responses: {},
+  currentSection: 0,
+  activeToken: null,
+  studentInfo: null,
+  submitted: false,
+  submitting: false
+};
+
+try { state.links = JSON.parse(localStorage.getItem("ta_v2_links") || "[]"); } catch {}
+
+function saveLinks() {
+  try { localStorage.setItem("ta_v2_links", JSON.stringify(state.links)); } catch {}
+}
+
+// ============================
+// TOKEN SYSTEM
+// Link format: base64(JSON{name,grade,email,note,id,ts}) + "." + hmac
+// ============================
+async function buildToken(linkData) {
+  const expiresAt = linkData.createdTs + (TOKEN_EXPIRY_DAYS * 86400000);
+  const payload = b64encode(JSON.stringify({
+    n: linkData.name,
+    g: linkData.grade,
+    e: linkData.email,
+    id: linkData.id,
+    ts: linkData.createdTs,
+    exp: expiresAt       // expiry timestamp embedded in token
+  }));
+  const sig = await hmacSign(payload);
+  return payload + "." + sig;
+}
+
+async function verifyToken(token) {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 2) return null;
+    const [payload, sig] = parts;
+    if (!payload || !sig || sig.length < 16) return null;
+
+    // 1. Verify signature
+    const valid = await hmacVerify(payload, sig);
+    if (!valid) return null;
+
+    // 2. Decode payload
+    const data = JSON.parse(b64decode(payload));
+
+    // 3. Check expiry
+    if (data.exp && Date.now() > data.exp) return { _expired: true };
+
+    // 4. Validate expected fields exist
+    if (!data.id || !data.n || !data.ts) return null;
+
+    return data;
+  } catch { return null; }
+}
+
+// ============================
+// GENERATE LINK
+// ============================
+window.generateLink = async function() {
+  if (!checkSecretConfigured()) return;
+
+  const name  = sanitizeShort(document.getElementById("f-name").value);
+  const grade = sanitizeShort(document.getElementById("f-grade").value);
+  const email = sanitize(document.getElementById("f-email").value);
+  const note  = sanitizeShort(document.getElementById("f-note").value);
+
+  if (!name) { showToast("Please enter student name", "error"); return; }
+  if (!grade) { showToast("Please enter grade / class", "error"); return; }
+  if (!validateEmail(email)) { showToast("Please enter a valid email", "error"); return; }
+  if (!checkRateLimit()) { showToast("Too many links generated. Please wait a few minutes.", "error"); return; }
+
+  const btn = document.getElementById("btn-gen");
+  btn.disabled = true;
+  btn.textContent = "Generating…";
+
+  const id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now().toString(36);
+  const createdTs = Date.now();
+  const linkData = { id, name, grade, email, note, createdTs };
+
+  const token = await buildToken(linkData);
+  const url = window.location.href.split("?")[0] + "?token=" + encodeURIComponent(token);
+
+  const record = {
+    ...linkData,
+    token,
+    url,
+    createdAt: new Date().toLocaleString(),
+    status: "active"
+  };
+
+  state.links = [record, ...state.links];
+  saveLinks();
+  await syncSheet("NEW_LINK", { ...record, token: "[SECURED]" });
+
+  document.getElementById("f-name").value = "";
+  document.getElementById("f-grade").value = "";
+  document.getElementById("f-email").value = "";
+  document.getElementById("f-note").value = "";
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Generate Secure Link`;
+
+  renderLinks();
+  renderStats();
+  showToast("Secure link generated for " + name);
+};
+
+// ============================
+// RENDER COUNSELLOR
+// ============================
+function renderStats() {
+  const total = state.links.length;
+  const active = state.links.filter(l=>l.status==="active").length;
+  const completed = state.links.filter(l=>l.status==="completed").length;
+  document.getElementById("stat-total").textContent = total;
+  document.getElementById("stat-active").textContent = active;
+  document.getElementById("stat-completed").textContent = completed;
+  document.getElementById("links-count").textContent = total + " link" + (total!==1?"s":"");
+}
+
+function renderLinks() {
+  const el = document.getElementById("links-list");
+  if (state.links.length === 0) {
+    el.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <p>No links generated yet. Fill the form above to get started.</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = state.links.map(l => {
+    const initials = l.name.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase();
+    const statusClass = `status-${l.status}`;
+    const statusLabel = l.status.charAt(0).toUpperCase()+l.status.slice(1);
+    const shortCode = l.token.slice(-8).toUpperCase();
+    return `<div class="link-row" id="row-${l.id}">
+      <div class="student-avatar">${initials}</div>
+      <div class="link-info">
+        <div class="name">${escHtml(l.name)}</div>
+        <div class="meta">Grade ${escHtml(l.grade)}${l.email?" · "+escHtml(l.email):""} · ${l.createdAt}</div>
+      </div>
+      <div class="link-code">···${shortCode}</div>
+      <span class="status-pill ${statusClass}">${statusLabel}</span>
+      <button class="btn-copy" onclick="copyLink('${l.id}')" id="copy-${l.id}">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy link
+      </button>
+    </div>`;
+  }).join("");
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+window.copyLink = function(id) {
+  const l = state.links.find(x=>x.id===id);
+  if (!l) return;
+  navigator.clipboard.writeText(l.url).then(() => {
+    const btn = document.getElementById("copy-"+id);
+    if (btn) { btn.textContent = "Copied!"; btn.classList.add("copied"); }
+    showToast("Link copied to clipboard");
+    setTimeout(() => {
+      if (btn) { btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy link`; btn.classList.remove("copied"); }
+    }, 2500);
+  }).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = l.url; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); document.body.removeChild(ta);
+    showToast("Link copied to clipboard");
+  });
+};
+
+// ============================
+// SESSION CLOCK
+// ============================
+function updateClock() {
+  const el = document.getElementById("session-clock");
+  if (el) el.textContent = new Date().toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short",year:"numeric"}) + "  ·  " + new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================
+// STUDENT ASSESSMENT
+// ============================
+function totalQ() { return SECTIONS.reduce((a,s)=>a+s.qs.length,0); }
+function answeredQ() { return Object.keys(state.responses).length; }
+function secAnswered(idx) { return SECTIONS[idx].qs.filter(q=>state.responses[q.id]!==undefined).length; }
+
+function renderStudentPanel() {
+  document.getElementById("counsellor-panel").style.display = "none";
+  document.getElementById("student-panel").style.display = "block";
+
+  const info = state.studentInfo;
+  const initials = info.n.split(" ").map(c=>c[0]).join("").slice(0,2).toUpperCase();
+  document.getElementById("sp-avatar").textContent = initials;
+  document.getElementById("sp-name").textContent = info.n;
+
+  renderSection();
+}
+
+function updateProgress() {
+  const pct = Math.round(answeredQ()/totalQ()*100);
+  document.getElementById("sp-pct").textContent = pct+"%";
+  document.getElementById("sp-fill").style.width = pct+"%";
+}
+
+function renderSection() {
+  updateProgress();
+  const s = SECTIONS[state.currentSection];
+  const body = document.getElementById("sp-body");
+
+  // Section tabs
+  const tabsHtml = SECTIONS.map((sec,idx)=>{
+    const done = secAnswered(idx)===sec.qs.length;
+    const active = state.currentSection===idx;
+    let cls = "sec-tab";
+    if(active) cls+=" active"; else if(done) cls+=" done";
+    return `<button class="${cls}" onclick="goSection(${idx})">${done&&!active?`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`:""}S${idx+1}</button>`;
+  }).join("");
+
+  const qHtml = s.qs.map((q,qi)=>{
+    const ans = state.responses[q.id];
+    const isLast = qi===s.qs.length-1;
+    let inputHtml;
+    if(q.type==="date"){
+      inputHtml=`<input class="text-inp" type="date" value="${ans||""}" onchange="setAns('${q.id}',this.value)" style="max-width:200px">`;
+    } else if(q.type==="time"){
+      inputHtml=`<input class="text-inp" type="time" value="${ans||""}" onchange="setAns('${q.id}',this.value)" style="max-width:160px">`;
+    } else if(q.type==="text"){
+      inputHtml=`<input class="text-inp" type="text" placeholder="Type your answer…" value="${ans||""}" oninput="setAns('${q.id}',this.value)" maxlength="200">`;
+    } else {
+      inputHtml=`<div class="options-list">${q.o.map((opt,oi)=>{
+        const sel = ans===opt;
+        return `<label class="opt-label${sel?" selected":""}" onclick="selectOpt('${q.id}','${escAttr(opt)}')">
+          <input type="radio" name="${q.id}" ${sel?"checked":""} style="pointer-events:none">
+          <span>${escHtml(opt)}</span>
+        </label>`;
+      }).join("")}</div>`;
+    }
+    return `<div class="question-block" id="qb-${q.id}">
+      <div class="q-text"><span class="q-num">${qi+1}</span><span style="margin-left:8px">${escHtml(q.t)}</span></div>
+      ${inputHtml}
+    </div>`;
+  }).join("");
+
+  const isLast = state.currentSection===SECTIONS.length-1;
+  const prevBtn = `<button class="btn-nav" onclick="prevSec()" ${state.currentSection===0?"disabled":""}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Previous
+  </button>`;
+  const nextBtn = isLast
+    ? `<button class="btn-submit" onclick="submitAssessment()" ${state.submitting?"disabled":""}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        ${state.submitting?"Submitting…":"Submit Assessment"}
+      </button>`
+    : `<button class="btn-nav" onclick="nextSec()">
+        Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>`;
+
+  const answered = secAnswered(state.currentSection);
+  const total = s.qs.length;
+
+  body.innerHTML = `
+    <div class="section-tabs">${tabsHtml}</div>
+    <div class="section-card">
+      <div class="section-card-header">
+        <div class="cat-tag">${escHtml(s.cat)}</div>
+        <h3>${escHtml(s.title)}</h3>
+      </div>
+      <div class="section-card-body">${qHtml}</div>
+      <div class="section-nav">
+        ${prevBtn}
+        <span style="font-size:13px;color:var(--text-muted)">${answered}/${total} answered · Section ${state.currentSection+1}/${SECTIONS.length}</span>
+        ${nextBtn}
+      </div>
+    </div>`;
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+window.goSection = function(i){state.currentSection=i;renderSection()};
+window.prevSec = function(){if(state.currentSection>0){state.currentSection--;renderSection()}};
+window.nextSec = function(){if(state.currentSection<SECTIONS.length-1){state.currentSection++;renderSection()}};
+window.setAns = function(qid,val){state.responses[qid]=sanitize(val);updateProgress()};
+window.selectOpt = function(qid,val){
+  state.responses[qid]=val;
+  // Update DOM without full re-render
+  document.querySelectorAll(`[name="${qid}"]`).forEach(r=>{
+    const lbl=r.closest(".opt-label");
+    const isSelected=r.value===val||lbl.querySelector("span").textContent===val;
+    lbl.classList.toggle("selected",isSelected);
+    r.checked=isSelected;
+  });
+  updateProgress();
+};
+
+function escAttr(s){return String(s).replace(/'/g,"&apos;").replace(/"/g,"&quot;")}
+
+window.submitAssessment = async function() {
+  if(state.submitting) return;
+  state.submitting=true;
+
+  const body = document.getElementById("sp-body");
+  body.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+    <div style="font-size:14px;margin-bottom:8px">Securely submitting your assessment…</div>
+    <div style="font-size:12px">Please do not close this window.</div>
+  </div>`;
+
+  const payload = {
+    studentName: state.studentInfo.n,
+    grade: state.studentInfo.g,
+    email: state.studentInfo.e,
+    tokenId: state.studentInfo.id,
+    submittedAt: new Date().toLocaleString(),
+    totalAnswered: answeredQ(),
+    totalQuestions: totalQ(),
+    responses: Object.entries(state.responses).map(([qid,ans])=>{
+      const sec = SECTIONS.find(s=>s.qs.find(q=>q.id===qid));
+      const q = sec ? sec.qs.find(q=>q.id===qid) : null;
+      return {section:sec?sec.title:"",question:q?q.t:"",answer:ans};
+    })
+  };
+
+  // Mark as completed in local store
+  const updated = state.links.map(l=>l.id===state.studentInfo.id?{...l,status:"completed",completedAt:new Date().toLocaleString()}:l);
+  state.links=updated; saveLinks();
+
+  await syncSheet("SUBMIT", payload);
+  state.submitted=true;
+  state.submitting=false;
+
+  body.innerHTML=`<div class="success-screen">
+    <div class="success-icon">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#e8b84b" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>Assessment Complete</h2>
+    <p>Thank you, ${escHtml(state.studentInfo.n)}. Your responses have been securely recorded and submitted.</p>
+    <p style="margin-top:16px;font-size:13px">A detailed Thryve Aspire report will be prepared and shared with your counsellor.</p>
+  </div>`;
+};
+
+// ============================
+// SHEETS SYNC — authenticated
+// Apps Script requires form-encoded POST (not JSON) when called
+// from a browser due to CORS preflight restrictions.
+// We encode the whole payload as a single "data" field.
+// ============================
+async function syncSheet(action, data) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("YOUR_DEPLOYMENT_ID")) {
+    console.warn("Thryve: APPS_SCRIPT_URL not configured — skipping sync");
+    return { ok: false, reason: "not_configured" };
+  }
+  try {
+    const tokenId = data.tokenId || data.id || "";
+    const ts      = Date.now();
+    const auth    = await makeRequestAuth(action, tokenId, ts);
+    const payload = JSON.stringify({ action, ...data, _auth: auth, _ts: ts });
+
+    // Use text/plain to avoid CORS preflight — Apps Script reads e.postData.contents
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method:  "POST",
+      headers: { "Content-Type": "text/plain" },
+      body:    payload
+    });
+    if (!res.ok) {
+      console.error("Thryve syncSheet HTTP error:", res.status, res.statusText);
+      return { ok: false, status: res.status };
+    }
+    const json = await res.json();
+    if (!json.ok) console.warn("Thryve syncSheet server error:", json.error);
+    return json;
+  } catch(err) {
+    console.error("Thryve syncSheet fetch error:", err.message);
+    return { ok: false, reason: err.message };
+  }
+}
+
+// Connection test — called by the Test button in the UI
+window.testConnection = async function() {
+  const btn  = document.getElementById("btn-test");
+  const out  = document.getElementById("test-out");
+  if (!btn || !out) return;
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("YOUR_DEPLOYMENT_ID")) {
+    out.textContent = "APPS_SCRIPT_URL is not set in the HTML file.";
+    out.style.color = "var(--gold)";
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = "Testing…";
+  out.textContent = "";
+  const result = await syncSheet("TEST_PING", { message: "connection test" });
+  btn.disabled  = false;
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg> Test connection`;
+  if (result && result.ok) {
+    out.textContent = "Connected! Sheet is receiving data.";
+    out.style.color = "#4caf50";
+  } else {
+    const reason = result ? (result.error || result.reason || result.status || "unknown error") : "no response";
+    out.textContent = "Failed: " + reason + ". Check console (F12) for details.";
+    out.style.color = "#e05252";
+  }
+};
+
+// ============================
+// TOAST
+// ============================
+function showToast(msg, type="ok") {
+  const existing = document.querySelector(".toast");
+  if(existing) existing.remove();
+  const t = document.createElement("div");
+  t.className = "toast" + (type==="error"?" error":"");
+  t.innerHTML = (type==="error"
+    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
+    : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`)
+    + " " + escHtml(msg);
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+// ============================
+// BOOT — check for token in URL
+// ============================
+async function boot() {
+  renderStats();
+  renderLinks();
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+  if (!token) return;
+
+  // Verify token signature + expiry
+  const info = await verifyToken(decodeURIComponent(token));
+
+  if (!info) {
+    document.getElementById("counsellor-panel").style.display = "none";
+    document.getElementById("student-panel").style.display = "block";
+    document.getElementById("sp-body").innerHTML = `
+      <div style="text-align:center;padding:60px 20px">
+        <div style="font-size:40px;margin-bottom:16px">🔒</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--navy);margin-bottom:12px">Invalid Link</h2>
+        <p style="color:var(--text-muted);font-size:14px">This assessment link is invalid or has been tampered with.<br>Please ask your counsellor to generate a new link.</p>
+      </div>`;
+    return;
+  }
+
+  if (info._expired) {
+    document.getElementById("counsellor-panel").style.display = "none";
+    document.getElementById("student-panel").style.display = "block";
+    document.getElementById("sp-body").innerHTML = `
+      <div style="text-align:center;padding:60px 20px">
+        <div style="font-size:40px;margin-bottom:16px">⏰</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--navy);margin-bottom:12px">Link Expired</h2>
+        <p style="color:var(--text-muted);font-size:14px">This assessment link has expired (links are valid for ${TOKEN_EXPIRY_DAYS} days).<br>Please ask your counsellor to generate a new one.</p>
+      </div>`;
+    return;
+  }
+
+  // Check if already used/completed (local store)
+  const record = state.links.find(l=>l.id===info.id);
+  if (record && (record.status==="used"||record.status==="completed")) {
+    document.getElementById("counsellor-panel").style.display = "none";
+    document.getElementById("student-panel").style.display = "block";
+    document.getElementById("sp-body").innerHTML = `
+      <div style="text-align:center;padding:60px 20px">
+        <div style="font-size:40px;margin-bottom:16px">✅</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--navy);margin-bottom:12px">Already Submitted</h2>
+        <p style="color:var(--text-muted);font-size:14px">This assessment has already been ${record.status}.<br>Each link can only be used once.</p>
+      </div>`;
+    return;
+  }
+
+  // Mark as used
+  const updated = state.links.map(l=>l.id===info.id?{...l,status:"used",openedAt:new Date().toLocaleString()}:l);
+  state.links=updated; saveLinks();
+  await syncSheet("LINK_OPENED",{tokenId:info.id,openedAt:new Date().toLocaleString()});
+
+  state.studentInfo = info;
+  renderStudentPanel();
+}
+
+boot();
+</script>
+</body>
+</html>
