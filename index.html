@@ -3,19 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy"
-content="
-default-src 'self' https:;
-script-src 'self' 'unsafe-inline' 'unsafe-eval' https://script.google.com https://apis.google.com;
-connect-src 'self' https://script.google.com https://script.googleusercontent.com;
-style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-font-src 'self' https://fonts.gstatic.com;
-img-src 'self' data: https:;
-frame-src https://script.google.com;
-">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com;">
 <title>Thryve Aspire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>
+if (new URLSearchParams(window.location.search).has("token")) {
+  document.documentElement.classList.add("student-link-booting");
+}
+</script>
 <style>
 :root {
   --navy: #0d1b3e;
@@ -65,6 +61,9 @@ body::before{
 .logo-mark svg{filter:drop-shadow(0 4px 12px rgba(201,146,10,0.3))}
 
 /* ===================== COUNSELLOR PANEL ===================== */
+.student-link-booting #counsellor-panel{display:none}
+.student-link-booting #student-panel{display:block}
+
 #counsellor-panel{
   position:relative;
   z-index:1;
@@ -432,6 +431,16 @@ body::before{
   background:var(--cream);outline:none;transition:border-color 0.2s,box-shadow 0.2s;
 }
 .text-inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,146,10,0.1);background:var(--warm-white)}
+.text-inp.invalid{border-color:#e05252;box-shadow:0 0 0 3px rgba(224,82,82,0.1)}
+textarea.text-inp{resize:vertical;min-height:92px;line-height:1.5}
+.basic-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.basic-info-copy{font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:22px}
+.required-note{font-size:12px;color:var(--text-muted);margin-top:14px;line-height:1.5}
+.sp-timer{min-width:150px;margin:0 20px;color:var(--gold-pale)}
+.sp-timer .label{font-size:11px;letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between;margin-bottom:5px;opacity:.85}
+.sp-timer-track{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
+.sp-timer-fill{height:3px;background:var(--gold-light);border-radius:2px;transition:width .4s ease,background .2s}
+.sp-timer.warning .sp-timer-fill{background:#e05252}
 
 /* NAV BUTTONS */
 .section-nav{
@@ -521,9 +530,9 @@ body::before{
 @media(max-width:720px){
   .cp-header{padding:18px 20px}
   .cp-body{padding:24px 16px}
-  .form-grid{grid-template-columns:1fr}
+  .form-grid,.basic-info-grid{grid-template-columns:1fr}
   .stats-row{grid-template-columns:1fr 1fr}
-  .sp-progress-bar{display:none}
+  .sp-progress-bar,.sp-timer{display:none}
   .sp-body{padding:24px 16px 80px}
   .gen-form,.section-card-body,.section-nav{padding:18px}
   .link-code{display:none}
@@ -693,6 +702,10 @@ body::before{
       <div class="label"><span>Progress</span><span id="sp-pct">0%</span></div>
       <div class="sp-progress-track"><div class="sp-progress-fill" id="sp-fill" style="width:0%"></div></div>
     </div>
+    <div class="sp-timer" id="sp-timer-wrap">
+      <div class="label"><span>Time Left</span><span id="sp-time-left">03:00:00</span></div>
+      <div class="sp-timer-track"><div class="sp-timer-fill" id="sp-time-fill" style="width:100%"></div></div>
+    </div>
     <div class="sp-student-chip">
       <div class="avatar" id="sp-avatar">—</div>
       <span class="sname" id="sp-name">Student</span>
@@ -712,7 +725,7 @@ body::before{
 // ============================
 
 // Your Google Apps Script deployment URL
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIT2-4c10XgsrymP5BXdYwzkYIjohX4DYfOWYUvXqQXALzyhA9AjSjkfN76zeSZpn9Vg/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtrzRFFB6yJFE21DGfJb8zf7P9S2KpXQBe0aY3b8BqtPfk954HRAVKzgEXvzQh230kiA/exec";
 
 // A shared secret known only to you — used to sign every token
 // and authenticate every request to the sheet.
@@ -724,6 +737,7 @@ const SHARED_SECRET = "ve61887763-cd68-4d6f-9dc0-8a2d58b6699cas";
 
 // Token expiry: how many days a generated link stays valid (default 7)
 const TOKEN_EXPIRY_DAYS = 7;
+const ASSESSMENT_TIME_LIMIT_MS = 3 * 60 * 60 * 1000;
 
 // ============================
 // SECURITY UTILITIES
@@ -829,120 +843,1511 @@ function checkSecretConfigured() {
 // QUESTIONNAIRE DATA
 // ============================
 const SECTIONS = [
-  {id:"s1",title:"Unique Personality Assessment",cat:"Self-Discovery & Purpose",qs:[
-    {id:"s1q1",t:"You're invited to a weekend social event. What excites you most?",o:["Meeting new people and enjoying the lively atmosphere.","Spending quality time with a few close friends."]},
-    {id:"s1q2",t:"When working on a project, how do you prefer to engage?",o:["In a collaborative environment with group discussions.","Independently, focusing on deep work without distractions."]},
-    {id:"s1q3",t:"In a new environment, how do you navigate?",o:["Explore every corner and talk to people immediately.","Observe quietly and take my time to adjust."]},
-    {id:"s1q4",t:"Your idea of a perfect evening is:",o:["Going out and experiencing something new.","Staying in with a book or a hobby."]},
-    {id:"s1q5",t:"How do you recharge after a long day?",o:["Spending time in social settings.","Having quiet alone time."]},
-    {id:"s1q6",t:"Do you prefer:",o:["Leading discussions and brainstorming ideas.","Reflecting and analyzing situations privately."]},
-    {id:"s1q7",t:"When in a group, you usually:",o:["Speak up and share my ideas freely.","Listen carefully and contribute thoughtfully."]},
-    {id:"s1q8",t:"When learning something new, do you prefer:",o:["Practical applications and real-world examples.","Abstract concepts and exploring possibilities."]},
-    {id:"s1q9",t:"In decision-making, do you rely more on:",o:["Facts and proven methods.","Gut feeling and creative ideas."]},
-    {id:"s1q10",t:"You prefer planning your future:",o:["With step-by-step actionable goals.","By following where life takes you."]},
-    {id:"s1q11",t:"When solving a problem, do you:",o:["Follow traditional methods that have worked before.","Think outside the box and try new approaches."]},
-    {id:"s1q12",t:"You enjoy subjects that are:",o:["Practical and grounded in reality.","Theoretical and open-ended."]},
-    {id:"s1q13",t:"When making plans, you:",o:["Prefer having clear details and structure.","Enjoy flexibility and spontaneous decisions."]},
-    {id:"s1q14",t:"Your strength lies in:",o:["Working with known facts and logic.","Imagining possibilities and future scenarios."]},
-    {id:"s1q15",t:"When faced with a tough decision, do you:",o:["Use logic and objective analysis.","Consider people's feelings and relationships."]},
-    {id:"s1q16",t:"At work or school, what matters more to you?",o:["Achieving results and meeting objectives.","Ensuring harmony and well-being of everyone involved."]},
-    {id:"s1q17",t:"How do you prefer to handle conflicts?",o:["By addressing the issue logically and finding solutions.","By considering emotions and finding compromises."]},
-    {id:"s1q18",t:"What motivates you more?",o:["Recognition for achievements.","Making a positive impact on others."]},
-    {id:"s1q19",t:"When making choices, do you:",o:["Follow your head and analyze facts.","Follow your heart and values."]},
-    {id:"s1q20",t:"You prioritize:",o:["Efficiency and productivity.","Relationships and collaboration."]},
-    {id:"s1q21",t:"Success means:",o:["Achieving tangible goals and progress.","Creating meaningful experiences and relationships."]},
-    {id:"s1q22",t:"How do you approach deadlines?",o:["Work steadily and finish ahead of time.","Work best under pressure with last-minute efforts."]},
-    {id:"s1q23",t:"Your approach to organizing tasks is:",o:["Structured and planned in advance.","Flexible and adaptable to changes."]},
-    {id:"s1q24",t:"In your daily routine, do you prefer:",o:["A well-structured schedule.","A relaxed and spontaneous flow."]},
-    {id:"s1q25",t:"When traveling, do you:",o:["Plan everything in advance.","Enjoy spontaneous adventures."]},
-    {id:"s1q26",t:"In handling challenges, you prefer:",o:["Sticking to tried-and-tested methods.","Adapting and experimenting along the way."]},
-    {id:"s1q27",t:"What describes you best?",o:["Organized and disciplined.","Flexible and open-minded."]},
-    {id:"s1q28",t:"You are most productive when:",o:["Following a detailed to-do list.","Allowing yourself room for creativity."]}
-  ]},
-  {id:"s2",title:"Life Transition Readiness",cat:"Self-Discovery & Purpose",qs:[
-    {id:"s2q1",t:"You're moving to a new city for college. What's your first step?",o:["Plan every detail in advance, from accommodation to daily routines.","Take it one step at a time and explore as you go."]},
-    {id:"s2q2",t:"If you face a problem adjusting to new cultural norms, what do you do?",o:["Seek help from mentors or student groups.","Observe and adapt gradually to the new environment."]},
-    {id:"s2q3",t:"What drives your choice of academic program and career path?",o:["A structured roadmap based on research and expert advice.","My inner passions and evolving interests."]},
-    {id:"s2q4",t:"When feeling homesick, what would comfort you the most?",o:["Calling family and friends frequently.","Engaging in new activities to stay distracted."]},
-    {id:"s2q5",t:"Given multiple career options aligned with your strengths, how do you choose?",o:["Evaluate each based on long-term security and stability.","Pursue what excites and motivates me the most."]},
-    {id:"s2q6",t:"Balancing academics and social life in college seems challenging. What's your plan?",o:["Set clear priorities and follow a routine.","Go with the flow and balance as opportunities come."]},
-    {id:"s2q7",t:"If facing a stressful situation in college, how would you cope?",o:["Seek professional or peer support immediately.","Try to manage stress independently first."]},
-    {id:"s2q8",t:"Invited to multiple college clubs. How do you decide which ones to join?",o:["Evaluate based on career goals and interests.","Try out a few and decide later."]},
-    {id:"s2q9",t:"You have free time between classes. How do you usually spend it?",o:["Catching up on studies or planning ahead.","Socialising and exploring new hobbies."]},
-    {id:"s2q10",t:"A sudden change in college schedule disrupts your plans. How do you react?",o:["Quickly reorganise and adapt.","Take time to adjust and find new strategies."]},
-    {id:"s2q11",t:"When faced with competing priorities, how do you decide?",o:["Follow a pre-set plan and adjust as needed.","Rely on intuition and current priorities."]},
-    {id:"s2q12",t:"What inspires you the most in your journey to college?",o:["Achieving financial and career success.","Personal growth and making a meaningful impact."]}
-  ]},
-  {id:"s3",title:"Astrological Insights",cat:"Astrological & Numerological",qs:[
-    {id:"s3q1",t:"Date of birth (for astrological analysis):",type:"date"},
-    {id:"s3q2",t:"Birth time, if known (optional):",type:"time"},
-    {id:"s3q3",t:"Place of birth:",type:"text"},
-    {id:"s3q4",t:"Which career theme resonates most with you?",o:["Leadership and authority roles","Creative and artistic pursuits","Service-oriented and helping others","Intellectual and research-driven work","Entrepreneurship and innovation"]},
-    {id:"s3q5",t:"What life area feels most important right now?",o:["Career and professional growth","Relationships and personal connections","Personal freedom and exploration","Stability and security","Spiritual and inner development"]}
-  ]},
-  {id:"s4",title:"Numerological Guidance",cat:"Astrological & Numerological",qs:[
-    {id:"s4q1",t:"Full name at birth:",type:"text"},
-    {id:"s4q2",t:"Which number resonates most with you?",o:["1 – Leadership and independence","2 – Cooperation and balance","3 – Creativity and expression","4 – Structure and discipline","5 – Freedom and adventure","6 – Harmony and responsibility","7 – Analysis and wisdom","8 – Ambition and success","9 – Compassion and completion"]},
-    {id:"s4q3",t:"Your life path feels most aligned with:",o:["Building something lasting","Helping and supporting others","Exploring and discovering new things","Creating and expressing ideas","Leading and influencing change"]}
-  ]},
-  {id:"s6",title:"College & Course Exploration",cat:"Career Exploration",qs:[
-    {id:"s6q1",t:"Which academic subjects do you enjoy most?",o:["Science and technology","Arts, humanities and languages","Business and economics","Social sciences and psychology","Health and life sciences"]},
-    {id:"s6q2",t:"What kind of work environment do you see yourself in?",o:["Office or corporate setting","Outdoors or in the field","Laboratory or research facility","Creative studio or workshop","Community or social service setting"]},
-    {id:"s6q3",t:"How important is financial stability in your career choice?",o:["Extremely important — it's my top priority","Important but balanced with passion","Somewhat important — passion comes first","Not very important — I follow my calling"]},
-    {id:"s6q4",t:"What would you most like your career to achieve?",o:["Make a lot of money","Make a positive difference in people's lives","Create something new or innovative","Gain recognition and prestige","Achieve personal fulfilment and growth"]},
-    {id:"s6q5",t:"Have you researched colleges or courses yet?",o:["Yes, extensively","Somewhat — I have a few options in mind","A little bit","Not yet"]},
-    {id:"s6q6",t:"What type of college experience appeals to you?",o:["Large university with many resources","Small college with close community","Online or hybrid learning","Vocational or technical institute","I'm not sure yet"]}
-  ]},
-  {id:"s7",title:"Family & Social Influence",cat:"Influence & Environment",qs:[
-    {id:"s7q1",t:"How much does your family influence your career decisions?",o:["A great deal — I follow their guidance closely","Moderately — I consider their input but decide myself","Slightly — I listen but chart my own path","Not at all — I make fully independent decisions"]},
-    {id:"s7q2",t:"Do your close friends share similar career aspirations?",o:["Yes, very similar","Somewhat similar","Quite different","I'm not sure"]},
-    {id:"s7q3",t:"Has a mentor or role model influenced your career thinking?",o:["Yes, significantly","Yes, somewhat","A little","No mentor yet"]},
-    {id:"s7q4",t:"How do you handle it when family expectations differ from your goals?",o:["I try to align both as much as possible","I advocate respectfully for my own path","I tend to go with family expectations","I feel conflicted and unsure"]},
-    {id:"s7q5",t:"What role does social media play in shaping your career ideas?",o:["Very important — I discover careers through it","Somewhat important","Minor influence","I avoid using social media for this"]}
-  ]},
-  {id:"s9",title:"Stress Management & Emotional Readiness",cat:"Emotional Wellness",qs:[
-    {id:"s9q1",t:"When under significant stress, what do you typically do first?",o:["Talk to someone I trust","Take time alone to reflect","Exercise or do something physical","Distract myself with entertainment","Try to solve the source of stress directly"]},
-    {id:"s9q2",t:"How often do you feel overwhelmed by academic or personal pressures?",o:["Very often","Sometimes","Rarely","Almost never"]},
-    {id:"s9q3",t:"How well do you bounce back from setbacks or failures?",o:["Very well — I recover quickly","Fairly well with some time","It takes me a while","I struggle to recover easily"]},
-    {id:"s9q4",t:"Your emotional response when facing major change?",o:["I feel excited and energised","I feel cautiously optimistic","I feel anxious but manage it","I feel very anxious or resistant"]},
-    {id:"s9q5",t:"Do you have strategies or routines that help manage your mental wellbeing?",o:["Yes, well-established routines","Some strategies but inconsistently applied","A few ideas but nothing solid","Not really"]},
-    {id:"s9q6",t:"How comfortable are you asking for help when struggling emotionally?",o:["Very comfortable","Somewhat comfortable","A bit uncomfortable","Very uncomfortable"]}
-  ]},
-  {id:"s10",title:"Practical Life Skills & Financial Planning",cat:"Life Skills",qs:[
-    {id:"s10q1",t:"You receive your first monthly stipend. What do you do first?",o:["Create a budget — allocate for necessities, savings, and leisure.","Spend on things I need right away and manage the rest later.","Spend most on things I want and worry about savings later."]},
-    {id:"s10q2",t:"Your expense tracker shows you're overspending. What next?",o:["Review spending, cut non-essentials, and adjust budget.","Ignore it and hope the next month balances out.","Borrow from a friend and repay later."]},
-    {id:"s10q3",t:"A financial emergency arises. How do you handle it?",o:["Use your emergency fund or seek a structured loan.","Sell non-essential items to cover costs.","Panic and make impulsive financial decisions."]},
-    {id:"s10q4",t:"You have multiple tasks due on the same day. How do you manage?",o:["Prioritise by urgency and importance, then work systematically.","Start with the easiest tasks first.","Procrastinate and rush through everything last minute."]},
-    {id:"s10q5",t:"How do you handle deadline pressure?",o:["Use the extra time to improve work.","Submit as planned.","Procrastinate and delay submission."]},
-    {id:"s10q6",t:"When given independence in a new environment, what is your approach?",o:["Create a daily routine.","Learn through trial and error.","Struggle and call for frequent help."]},
-    {id:"s10q7",t:"How do you approach career decisions involving trade-offs?",o:["Choose lower pay for growth opportunities.","Negotiate salary.","Prioritise higher salary only."]},
-    {id:"s10q8",t:"When unexpected accommodation issues arise, you:",o:["Stay calm and find alternative housing.","Stress out but adapt.","Give up and go back home."]}
-  ]},
-  {id:"s11",title:"Goal-Setting Strategies",cat:"Life Skills",qs:[
-    {id:"s11q1",t:"A scholarship deadline is three months away. How do you approach it?",o:["Break requirements into small tasks and work regularly.","Wait until the last week and rush.","Assume you won't qualify and don't apply.","Ask a friend to remind you and decide later."]},
-    {id:"s11q2",t:"Your friend talks about their dream college but you haven't thought about yours. You:",o:["Research different career paths and colleges.","Wait and see what options are available later.","Ask your parents to choose for you.","Avoid thinking about it because it feels overwhelming."]},
-    {id:"s11q3",t:"An important exam is in two months but your favourite show just released a new season. You:",o:["Set a study plan first, then allow time for the show as a reward.","Watch episodes first, then study whenever.","Binge-watch the entire season and study later.","Stop studying and enjoy the show stress-free."]},
-    {id:"s11q4",t:"Your math grade was lower than expected. What's your next step?",o:["Review mistakes, seek teacher help, and adjust methods.","Feel discouraged and stop putting effort into math.","Blame test difficulty and wait for the next one.","Ignore it and focus on subjects you're already good at."]},
-    {id:"s11q5",t:"You're interested in a leadership camp but nervous about applying. What do you do?",o:["Push yourself out of your comfort zone and apply.","Wait to see if your friends apply first.","Decide against it because you might not get selected.","Ignore it because it sounds stressful."]},
-    {id:"s11q6",t:"You set a goal to wake up early and exercise but keep hitting snooze. What next?",o:["Adjust your bedtime and set small milestones.","Give up and stop trying to wake up early.","Keep setting alarms hoping it will eventually work.","Wait for motivation to return before trying again."]},
-    {id:"s11q7",t:"Your teacher suggests using a planner. How do you respond?",o:["Try using one and see if it helps.","Think about it but don't follow through.","Ignore it and rely on memory.","Assume it's too much effort and not worth it."]},
-    {id:"s11q8",t:"Your friend loses interest in a shared reading goal halfway through. What do you do?",o:["Continue your goal and encourage your friend to restart.","Stop reading too since they quit.","Change your goal to match theirs.","Lose motivation and forget about the goal."]},
-    {id:"s11q9",t:"You start a vision board but stop updating it after a few weeks. Your approach:",o:["Schedule time each month to review and update your goals.","Leave it and look at it occasionally.","Throw it away since you're not keeping up.","Forget about it and move on."]},
-    {id:"s11q10",t:"Your counsellor asks you to list three personal and three academic goals. You:",o:["Thoughtfully write down specific, achievable goals.","Write something generic just to complete the task.","Leave the paper blank because you're unsure.","Copy a friend's goals without thinking."]}
-  ]},
-  {id:"s12",title:"Lifelong Learning & Growth Mindset",cat:"Life Skills",qs:[
-    {id:"s12q1",t:"Your teacher introduces a difficult topic. Your response:",o:["Stay curious, ask questions, and explore extra resources.","Try to memorise the basics without fully understanding.","Assume it's too hard and wait for the teacher to re-explain.","Give up and stop paying attention."]},
-    {id:"s12q2",t:"An online coding course is harder than expected. You:",o:["Break lessons into smaller parts and practice consistently.","Skip the hard topics and only focus on easy ones.","Drop out and look for something simpler.","Complain about difficulty and stop trying."]},
-    {id:"s12q3",t:"Your school introduces more self-study. How do you react?",o:["Embrace the challenge and develop a new study routine.","Struggle at first but try to adjust slowly.","Wait and hope things go back to the old way.","Feel frustrated and stop engaging in lessons."]},
-    {id:"s12q4",t:"Your friend performs better than you and you feel discouraged. What do you do?",o:["Observe their study methods and try to learn from them.","Accept you may never be as good and stop trying hard.","Feel jealous and compare yourself negatively.","Ignore studies because competing feels pointless."]},
-    {id:"s12q5",t:"The school library adds books on space, AI, and psychology. What do you do?",o:["Pick up a book and explore a new subject.","Stick to books directly related to current subjects.","Avoid exploring because you think it's unnecessary.","Think about it but never actually do it."]},
-    {id:"s12q6",t:"You meet someone who speaks multiple languages and travels the world. This makes you feel:",o:["Inspired to learn something new.","Curious but unsure where to start.","Uninterested because it doesn't affect your current life.","Intimidated and convinced learning new skills is too hard."]},
-    {id:"s12q7",t:"You come across a completely new topic online. What do you do?",o:["Look it up, read about it, and try to understand the basics.","Think it's interesting but don't explore it further.","Ignore it because it's not related to your studies.","Feel uninterested and move on."]},
-    {id:"s12q8",t:"Your school offers a free online course on an interesting but off-syllabus topic. You:",o:["Sign up and explore it because learning is valuable.","Wait to see if your friends join first.","Ignore it since it won't affect grades.","Assume it will be boring and skip it."]},
-    {id:"s12q9",t:"Your teacher asks you to write a letter to your future self. How do you approach it?",o:["Write meaningful goals and dreams to reflect on later.","Write something quickly just to complete the task.","Copy what others are writing.","Don't take it seriously and write something random."]},
-    {id:"s12q10",t:"You are given the chance to shadow a professional for a day. You:",o:["Grab the opportunity and ask as many questions as possible.","Attend but stay quiet because you feel nervous.","Avoid it because you don't think it will be useful now.","Let someone else take the opportunity instead."]},
-    {id:"s12q11",t:"Your school encourages setting personal development goals. Your approach:",o:["Set clear personal and academic goals to improve yourself.","Set goals but don't really track them.","Feel uninterested because you don't see the point.","Ignore goal-setting because it feels like extra work."]}
-  ]}
+  {
+    "id": "s1",
+    "title": "Unique Personality Assessment",
+    "cat": "Self-Discovery & Purpose Alignment",
+    "qs": [
+      {
+        "id": "s1q1",
+        "t": "You're invited to a weekend social event. What excites you most?",
+        "o": [
+          "Meeting new people and enjoying the lively atmosphere.",
+          "Spending quality time with a few close friends."
+        ]
+      },
+      {
+        "id": "s1q2",
+        "t": "When working on a project, how do you prefer to engage?",
+        "o": [
+          "In a collaborative environment with group discussions.",
+          "Independently, focusing on deep work without distractions."
+        ]
+      },
+      {
+        "id": "s1q3",
+        "t": "In a new environment, how do you navigate?",
+        "o": [
+          "Explore every corner and talk to people immediately.",
+          "Observe quietly and take my time to adjust."
+        ]
+      },
+      {
+        "id": "s1q4",
+        "t": "Your idea of a perfect evening is:",
+        "o": [
+          "Going out and experiencing something new.",
+          "Staying in with a book or a hobby."
+        ]
+      },
+      {
+        "id": "s1q5",
+        "t": "How do you recharge after a long day?",
+        "o": [
+          "Spending time in social settings.",
+          "Having quiet alone time."
+        ]
+      },
+      {
+        "id": "s1q6",
+        "t": "Do you prefer:",
+        "o": [
+          "Leading discussions and brainstorming ideas.",
+          "Reflecting and analyzing situations privately."
+        ]
+      },
+      {
+        "id": "s1q7",
+        "t": "When in a group, you usually:",
+        "o": [
+          "Speak up and share my ideas freely.",
+          "Listen carefully and contribute thoughtfully."
+        ]
+      },
+      {
+        "id": "s1q8",
+        "t": "When learning something new, do you prefer:",
+        "o": [
+          "Practical applications and real-world examples.",
+          "Abstract concepts and exploring possibilities."
+        ]
+      },
+      {
+        "id": "s1q9",
+        "t": "In decision-making, do you rely more on:",
+        "o": [
+          "Facts and proven methods.",
+          "Gut feeling and creative ideas."
+        ]
+      },
+      {
+        "id": "s1q10",
+        "t": "You prefer planning your future:",
+        "o": [
+          "With step-by-step actionable goals.",
+          "By following where life takes you."
+        ]
+      },
+      {
+        "id": "s1q11",
+        "t": "When solving a problem, do you:",
+        "o": [
+          "Follow traditional methods that have worked before.",
+          "Think outside the box and try new approaches."
+        ]
+      },
+      {
+        "id": "s1q12",
+        "t": "You enjoy subjects that are:",
+        "o": [
+          "Practical and grounded in reality.",
+          "Theoretical and open-ended."
+        ]
+      },
+      {
+        "id": "s1q13",
+        "t": "When making plans, you:",
+        "o": [
+          "Prefer having clear details and structure.",
+          "Enjoy flexibility and spontaneous decisions."
+        ]
+      },
+      {
+        "id": "s1q14",
+        "t": "Your strength lies in:",
+        "o": [
+          "Working with known facts and logic.",
+          "Imagining possibilities and future scenarios."
+        ]
+      },
+      {
+        "id": "s1q15",
+        "t": "When faced with a tough decision, do you:",
+        "o": [
+          "Use logic and objective analysis.",
+          "Consider people’s feelings and relationships."
+        ]
+      },
+      {
+        "id": "s1q16",
+        "t": "At work or school, what matters more to you?",
+        "o": [
+          "Achieving results and meeting objectives.",
+          "Ensuring harmony and well-being of everyone involved."
+        ]
+      },
+      {
+        "id": "s1q17",
+        "t": "How do you prefer to handle conflicts?",
+        "o": [
+          "By addressing the issue logically and finding solutions.",
+          "By considering emotions and finding compromises."
+        ]
+      },
+      {
+        "id": "s1q18",
+        "t": "What motivates you more?",
+        "o": [
+          "Recognition for achievements.",
+          "Making a positive impact on others."
+        ]
+      },
+      {
+        "id": "s1q19",
+        "t": "When making choices, do you:",
+        "o": [
+          "Follow your head and analyze facts.",
+          "Follow your heart and values."
+        ]
+      },
+      {
+        "id": "s1q20",
+        "t": "You prioritize:",
+        "o": [
+          "Efficiency and productivity.",
+          "Relationships and collaboration."
+        ]
+      },
+      {
+        "id": "s1q21",
+        "t": "Success means:",
+        "o": [
+          "Achieving tangible goals and progress.",
+          "Creating meaningful experiences and relationships."
+        ]
+      },
+      {
+        "id": "s1q22",
+        "t": "How do you approach deadlines?",
+        "o": [
+          "Work steadily and finish ahead of time.",
+          "Work best under pressure with last-minute efforts."
+        ]
+      },
+      {
+        "id": "s1q23",
+        "t": "Your approach to organizing tasks is:",
+        "o": [
+          "Structured and planned in advance.",
+          "Flexible and adaptable to changes."
+        ]
+      },
+      {
+        "id": "s1q24",
+        "t": "In your daily routine, do you prefer:",
+        "o": [
+          "A well-structured schedule.",
+          "A relaxed and spontaneous flow."
+        ]
+      },
+      {
+        "id": "s1q25",
+        "t": "When traveling, do you:",
+        "o": [
+          "Plan everything in advance.",
+          "Enjoy spontaneous adventures."
+        ]
+      },
+      {
+        "id": "s1q26",
+        "t": "In handling challenges, you prefer:",
+        "o": [
+          "Sticking to tried-and-tested methods.",
+          "Adapting and experimenting along the way."
+        ]
+      },
+      {
+        "id": "s1q27",
+        "t": "What describes you best?",
+        "o": [
+          "Organized and disciplined.",
+          "Flexible and open-minded."
+        ]
+      },
+      {
+        "id": "s1q28",
+        "t": "You are most productive when:",
+        "o": [
+          "Following a detailed to-do list.",
+          "Allowing yourself room for creativity."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s2",
+    "title": "Life Transition Readiness",
+    "cat": "Self-Discovery & Purpose Alignment",
+    "qs": [
+      {
+        "id": "s2q1",
+        "t": "You're moving to a new city for college. What’s your first step?",
+        "o": [
+          "Plan every detail in advance, from accommodation to daily routines.",
+          "Take it one step at a time and explore as you go."
+        ]
+      },
+      {
+        "id": "s2q2",
+        "t": "If you face a problem adjusting to new cultural norms, what do you do?",
+        "o": [
+          "Seek help from mentors or student groups.",
+          "Observe and adapt gradually to the new environment."
+        ]
+      },
+      {
+        "id": "s2q3",
+        "t": "What drives your choice of academic program and career path?",
+        "o": [
+          "A structured roadmap based on research and expert advice.",
+          "My inner passions and evolving interests."
+        ]
+      },
+      {
+        "id": "s2q4",
+        "t": "When feeling homesick, what would comfort you the most?",
+        "o": [
+          "Calling family and friends frequently.",
+          "Engaging in new activities to stay distracted."
+        ]
+      },
+      {
+        "id": "s2q5",
+        "t": "You are given multiple career options that align with your strengths. How do you choose?",
+        "o": [
+          "Evaluate each based on long-term security and stability.",
+          "Pursue what excites and motivates me the most."
+        ]
+      },
+      {
+        "id": "s2q6",
+        "t": "Balancing academics and social life in college seems challenging. What’s your plan?",
+        "o": [
+          "Set clear priorities and follow a routine.",
+          "Go with the flow and balance as opportunities come."
+        ]
+      },
+      {
+        "id": "s2q7",
+        "t": "If you're facing a stressful situation in college, how would you cope?",
+        "o": [
+          "Seek professional or peer support immediately.",
+          "Try to manage stress independently first."
+        ]
+      },
+      {
+        "id": "s2q8",
+        "t": "You’re invited to multiple college clubs. How do you decide which ones to join?",
+        "o": [
+          "Evaluate based on career goals and interests.",
+          "Try out a few and decide later."
+        ]
+      },
+      {
+        "id": "s2q9",
+        "t": "You have free time between classes. How do you usually spend it?",
+        "o": [
+          "Catching up on studies or planning ahead.",
+          "Socializing and exploring new hobbies."
+        ]
+      },
+      {
+        "id": "s2q10",
+        "t": "A sudden change in college schedule disrupts your plans. How do you react?",
+        "o": [
+          "Quickly reorganize and adapt.",
+          "Take time to adjust and find new strategies."
+        ]
+      },
+      {
+        "id": "s2q11",
+        "t": "When faced with competing priorities, how do you decide?",
+        "o": [
+          "Follow a pre-set plan and adjust as needed.",
+          "Rely on intuition and current priorities."
+        ]
+      },
+      {
+        "id": "s2q12",
+        "t": "What inspires you the most in your journey to college?",
+        "o": [
+          "Achieving financial and career success.",
+          "Personal growth and making a meaningful impact."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s3",
+    "title": "Astrological Insights for Career and Life",
+    "cat": "Astrological & Numerological Implications",
+    "qs": [
+      {
+        "id": "s3q1",
+        "t": "Date of birth:",
+        "type": "date"
+      },
+      {
+        "id": "s3q2",
+        "t": "Time of birth, if known:",
+        "type": "time"
+      },
+      {
+        "id": "s3q3",
+        "t": "Place of birth:",
+        "type": "text"
+      },
+      {
+        "id": "s3q4",
+        "t": "Which astrological career theme resonates most with you?",
+        "o": [
+          "Leadership, confidence, and public-facing roles",
+          "Creative, artistic, or expressive pursuits",
+          "Service-oriented and helping professions",
+          "Research, analysis, and intellectual work",
+          "Entrepreneurship, innovation, and independence"
+        ]
+      },
+      {
+        "id": "s3q5",
+        "t": "Which personal growth area feels most important right now?",
+        "o": [
+          "Work-life balance",
+          "Active listening and communication",
+          "Confidence and decision-making",
+          "Focus, discipline, and consistency",
+          "Self-awareness and emotional grounding"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s4",
+    "title": "Numerological Guidance",
+    "cat": "Astrological & Numerological Implications",
+    "qs": [
+      {
+        "id": "s4q1",
+        "t": "Full name at birth:",
+        "type": "text"
+      },
+      {
+        "id": "s4q2",
+        "t": "Date of birth:",
+        "type": "date"
+      },
+      {
+        "id": "s4q3",
+        "t": "Time of birth, if known:",
+        "type": "time"
+      },
+      {
+        "id": "s4q4",
+        "t": "Place of birth:",
+        "type": "text"
+      },
+      {
+        "id": "s4q5",
+        "t": "Which numerological profile feels closest to you?",
+        "o": [
+          "Leadership and independence",
+          "Cooperation and balance",
+          "Creativity and expression",
+          "Structure and discipline",
+          "Freedom, adaptability, and exploration",
+          "Harmony and responsibility",
+          "Analysis, wisdom, and introspection",
+          "Ambition, influence, and achievement",
+          "Compassion and contribution"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s5",
+    "title": "Academic Strengths and Preferences",
+    "cat": "Career Exploration",
+    "qs": [
+      {
+        "id": "s5q1",
+        "t": "You are part of a Geography expedition. What role do you prefer?",
+        "o": [
+          "Analyzing geographical data and patterns",
+          "Writing a journal documenting the journey",
+          "Managing logistics and team coordination",
+          "Creating maps or visual representations",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q2",
+        "t": "In a music or performance event, how do you contribute?",
+        "o": [
+          "Structuring rhythm or technical composition",
+          "Writing lyrics or adding creative inputs",
+          "Coordinating team practice and execution",
+          "Designing stage or visual presentation",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q3",
+        "t": "A workshop on future careers is being held. What excites you most?",
+        "o": [
+          "Artificial Intelligence / Data Science",
+          "Content Creation / Digital Media",
+          "Public Policy / Tech Ethics",
+          "UX/UI Design / Robotics",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q4",
+        "t": "You join a sustainability project. What role do you take?",
+        "o": [
+          "Researching environmental data and trends",
+          "Creating awareness campaigns or content",
+          "Presenting ideas and engaging stakeholders",
+          "Building models or practical solutions",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q5",
+        "t": "Your school asks for curriculum suggestions. What do you recommend?",
+        "o": [
+          "Data analysis and problem-solving modules",
+          "Creative storytelling and media workshops",
+          "Ethics and societal impact discussions",
+          "Hands-on innovation (robotics, design labs)",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q6",
+        "t": "In a history-geography integrated event, what interests you most?",
+        "o": [
+          "Analyzing patterns and context",
+          "Writing narratives connecting events",
+          "Organizing timelines and presentations",
+          "Designing visuals or interactive maps",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q7",
+        "t": "A coding workshop is offered. How do you participate?",
+        "o": [
+          "Solving logical and algorithmic problems",
+          "Creating creative or interactive applications",
+          "Collaborating and managing project flow",
+          "Designing user-friendly interfaces",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q8",
+        "t": "At a career fair, which session attracts you most?",
+        "o": [
+          "Scientific innovation and research",
+          "Creative industries and digital arts",
+          "Social impact and policymaking",
+          "Design, architecture, or product innovation",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q9",
+        "t": "You are designing a futuristic city. What excites you most?",
+        "o": [
+          "Infrastructure and technological systems",
+          "Vision storytelling and lifestyle concepts",
+          "Team collaboration and planning",
+          "3D modeling and design execution",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q10",
+        "t": "If guiding younger students, what would you focus on?",
+        "o": [
+          "Logical reasoning and problem-solving",
+          "Creative thinking and expression",
+          "Communication and teamwork",
+          "Practical innovation and design",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q11",
+        "t": "You observe a medical camp. What interests you most?",
+        "o": [
+          "Diagnosing and understanding diseases",
+          "Talking to patients and understanding emotions",
+          "Managing operations and coordination",
+          "Designing healthcare solutions/tools",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q12",
+        "t": "In biology or psychology topics, what engages you most?",
+        "o": [
+          "Scientific mechanisms of the human body",
+          "Human behavior and emotional patterns",
+          "Real-life case discussions",
+          "Diagrams and visual explanations",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q13",
+        "t": "In an architecture project, what role suits you best?",
+        "o": [
+          "Structural planning and calculations",
+          "Aesthetic design and creativity",
+          "Coordinating multidisciplinary teams",
+          "Building models or 3D designs",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q14",
+        "t": "Reflecting on Class 10, what felt most natural to you?",
+        "o": [
+          "Numerical and logical problem-solving",
+          "Writing and theoretical subjects",
+          "Discussions and conceptual understanding",
+          "Visual/practical projects and diagrams",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q15",
+        "t": "Working with children or people, what would you enjoy most?",
+        "o": [
+          "Understanding learning and development patterns",
+          "Counseling and emotional support",
+          "Organizing programs and activities",
+          "Designing tools or learning content",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q16",
+        "t": "Given a psychological case study, what would you do?",
+        "o": [
+          "Analyze root causes logically",
+          "Understand emotions and behavior deeply",
+          "Suggest structured solutions",
+          "Create awareness or educational material",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q17",
+        "t": "How do you feel about your current stream?",
+        "o": [
+          "Strongly aligned and interested",
+          "Partially interested in some subjects",
+          "Managing but not deeply connected",
+          "Misaligned and considering change",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q18",
+        "t": "In an environmental or innovation challenge, what excites you most?",
+        "o": [
+          "Data and scientific research",
+          "Creative campaigns and storytelling",
+          "Team coordination and leadership",
+          "Building solutions or prototypes",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q19",
+        "t": "While studying, what method works best for you?",
+        "o": [
+          "Practicing problems and applications",
+          "Making notes or creative summaries",
+          "Group discussions or teaching others",
+          "Visual diagrams and concept mapping",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q20",
+        "t": "In a human + AI future, what role interests you most?",
+        "o": [
+          "Building intelligent systems",
+          "Understanding human-AI interaction",
+          "Managing ethics and decision-making",
+          "Designing user experiences",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q21",
+        "t": "In a hospital/research setting, what would you prefer?",
+        "o": [
+          "Experiments and data analysis",
+          "Patient interaction and understanding",
+          "Operations and coordination",
+          "Designing tools or systems",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q22",
+        "t": "Based on Class 10 performance, where were you strongest?",
+        "o": [
+          "Science/Math",
+          "Languages/Writing",
+          "Social Sciences/Discussion",
+          "Practical/Visual subjects",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q23",
+        "t": "When solving real-world problems, what is your approach?",
+        "o": [
+          "Logical breakdown and analysis",
+          "Creative ideation",
+          "Discussion and collaboration",
+          "Practical prototyping",
+          "Not Applicable"
+        ]
+      },
+      {
+        "id": "s5q24",
+        "t": "If you had to realign your career path, what would guide you most?",
+        "o": [
+          "Subjects I perform well in",
+          "What genuinely interests me",
+          "Advice from mentors/experts",
+          "Future opportunities and exposure",
+          "Not Applicable"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s6",
+    "title": "College and Course Exploration",
+    "cat": "Career Exploration",
+    "qs": [
+      {
+        "id": "s6q1",
+        "t": "If you could study anywhere in the world, where would it be?",
+        "o": [
+          "In a bustling city with endless opportunities.",
+          "In a quieter town with a close-knit campus community.",
+          "Abroad, to experience a different culture and education system.",
+          "Locally, where I can stay close to family and familiar surroundings."
+        ]
+      },
+      {
+        "id": "s6q2",
+        "t": "Would you prefer your education to be:",
+        "o": [
+          "A formal degree program.",
+          "A diploma or certificate course.",
+          "A short-term or online program focused on specific skills.",
+          "A combination of multiple modes of learning."
+        ]
+      },
+      {
+        "id": "s6q3",
+        "t": "When considering colleges, what’s the most important factor?",
+        "o": [
+          "The college’s reputation and ranking.",
+          "The flexibility and variety of programs offered.",
+          "The opportunities for research, internships, or co-op programs.",
+          "The affordability and availability of scholarships or financial aid."
+        ]
+      },
+      {
+        "id": "s6q4",
+        "t": "You receive a scholarship offer for a college outside your country. What’s your first thought?",
+        "o": [
+          "How it will impact my long-term career plans.",
+          "The new experiences and people I’ll encounter.",
+          "The challenges of adapting to a new culture.",
+          "Whether I can manage the financial and emotional costs."
+        ]
+      },
+      {
+        "id": "s6q5",
+        "t": "Would you consider an online program if it offered the same credentials as a traditional college?",
+        "o": [
+          "Yes, I’d love the flexibility to study anywhere.",
+          "Maybe, but I’d miss the campus experience.",
+          "No, I prefer in-person learning environments.",
+          "I’d prefer a mix of online and offline learning."
+        ]
+      },
+      {
+        "id": "s6q6",
+        "t": "Imagine you’re planning your college life. What’s your primary focus?",
+        "o": [
+          "Excelling academically in a specialized field.",
+          "Exploring a variety of subjects to find my true interests.",
+          "Building a professional network and gaining work experience.",
+          "Balancing academics, hobbies, and personal growth."
+        ]
+      },
+      {
+        "id": "s6q7",
+        "t": "You have the option to attend a high-ranking but expensive college. What do you do?",
+        "o": [
+          "Work on securing scholarships or financial aid.",
+          "Choose a more affordable option to reduce financial stress.",
+          "Consider taking a loan or part-time work to manage costs.",
+          "Opt for a college that provides value for money and long-term benefits."
+        ]
+      },
+      {
+        "id": "s6q8",
+        "t": "What kind of environment helps you thrive academically?",
+        "o": [
+          "A competitive atmosphere that pushes me to excel.",
+          "A collaborative setting where ideas are freely shared.",
+          "A structured program with clear goals and expectations.",
+          "A flexible environment where I can learn at my own pace."
+        ]
+      },
+      {
+        "id": "s6q9",
+        "t": "How important is location when selecting a college?",
+        "o": [
+          "Very important—I want to live in a specific city or region.",
+          "Somewhat important—I’m open but have preferences.",
+          "Not very important—I prioritize the program over location.",
+          "Not important at all—I’d move anywhere for the right opportunity."
+        ]
+      },
+      {
+        "id": "s6q10",
+        "t": "What’s the one skill you want to develop in college?",
+        "o": [
+          "Leadership and decision-making.",
+          "Creativity and innovation.",
+          "Collaboration and teamwork.",
+          "Technical expertise in my chosen field."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s7",
+    "title": "Influence of Family and Social Circle",
+    "cat": "Influence & Environmental Factors",
+    "qs": [
+      {
+        "id": "s7q1",
+        "t": "Your family discusses career choices during dinner. What’s your reaction?",
+        "o": [
+          "I actively engage and share my thoughts about my interests.",
+          "I listen to their suggestions but prefer to decide independently.",
+          "I feel overwhelmed and unsure of how to respond.",
+          "I try to redirect the conversation to avoid conflict."
+        ]
+      },
+      {
+        "id": "s7q2",
+        "t": "A close family member suggests a career path for you. How do you feel?",
+        "o": [
+          "I consider their advice seriously and try to explore it further.",
+          "I appreciate their input but prefer exploring my own ideas.",
+          "I feel pressured and unsure of how to communicate my preferences.",
+          "I politely thank them and continue focusing on my current plans."
+        ]
+      },
+      {
+        "id": "s7q3",
+        "t": "When friends talk about their future plans, you usually:",
+        "o": [
+          "Share your own aspirations and discuss options together.",
+          "Listen carefully and reflect on how it relates to your own goals.",
+          "Feel uncertain about your own plans and avoid discussing them.",
+          "Get inspired and motivated to explore new opportunities."
+        ]
+      },
+      {
+        "id": "s7q4",
+        "t": "How do your parents or guardians support your academic goals?",
+        "o": [
+          "They actively guide and encourage me to achieve specific targets.",
+          "They let me decide and support me in exploring my own path.",
+          "They have high expectations but provide limited guidance.",
+          "They trust me entirely to manage my goals independently."
+        ]
+      },
+      {
+        "id": "s7q5",
+        "t": "If you’re struggling with a decision, whom do you usually approach for advice?",
+        "o": [
+          "A family member who knows you well.",
+          "A mentor or teacher who understands your goals.",
+          "A friend who shares similar experiences.",
+          "I prefer to figure it out on my own."
+        ]
+      },
+      {
+        "id": "s7q6",
+        "t": "Your friends are planning to pursue fields different from yours. How do you feel?",
+        "o": [
+          "I appreciate their choices but stay confident in my own decisions.",
+          "I feel a bit uncertain and rethink my own plans.",
+          "I’m curious about their paths and explore if they might align with mine.",
+          "I feel inspired but remain focused on my goals."
+        ]
+      },
+      {
+        "id": "s7q7",
+        "t": "You’re attending a family gathering where relatives ask about your career plans. How do you respond?",
+        "o": [
+          "Confidently explain your aspirations and plans.",
+          "Share a general idea without going into details.",
+          "Feel unsure and wish they wouldn’t ask.",
+          "Politely mention that you’re still exploring options."
+        ]
+      },
+      {
+        "id": "s7q8",
+        "t": "When peers achieve something significant academically or professionally, you usually:",
+        "o": [
+          "Feel motivated to work harder toward your own goals.",
+          "Reflect on how their success aligns with your aspirations.",
+          "Compare yourself and feel a bit discouraged.",
+          "Congratulate them and focus on your own journey."
+        ]
+      },
+      {
+        "id": "s7q9",
+        "t": "What role does your social circle play in influencing your academic or career decisions?",
+        "o": [
+          "They’re a strong motivator and provide valuable support.",
+          "They inspire me but don’t significantly influence my choices.",
+          "Their opinions occasionally make me rethink my plans.",
+          "They have little to no impact on my decisions."
+        ]
+      },
+      {
+        "id": "s7q10",
+        "t": "If you were to describe the biggest influence in your life, who would it be?",
+        "o": [
+          "A parent or guardian.",
+          "A teacher or mentor.",
+          "A close friend or peer.",
+          "A public figure or someone I admire."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s8",
+    "title": "Resource and Opportunity Mapping",
+    "cat": "Influence & Environmental Factors",
+    "qs": [
+      {
+        "id": "s8q1",
+        "t": "Imagine your school announces a new scholarship. What would you do first?",
+        "o": [
+          "Check if you meet the eligibility criteria and apply immediately.",
+          "Research how the scholarship aligns with your career goals.",
+          "Seek guidance from teachers or mentors to strengthen your application.",
+          "Discuss it with your family to weigh the benefits and challenges."
+        ]
+      },
+      {
+        "id": "s8q2",
+        "t": "If given access to a professional network, how would you use it?",
+        "o": [
+          "Connect with experts in your field of interest for advice.",
+          "Attend workshops or webinars to enhance your knowledge.",
+          "Explore internship or shadowing opportunities through contacts.",
+          "Build relationships with peers who share similar goals."
+        ]
+      },
+      {
+        "id": "s8q3",
+        "t": "Your school introduces a mentorship program. How do you engage with it?",
+        "o": [
+          "Regularly meet with your mentor to discuss academic goals.",
+          "Ask for guidance on balancing academics and extracurriculars.",
+          "Seek advice on personal development and future planning.",
+          "Work on projects together to learn through practical experiences."
+        ]
+      },
+      {
+        "id": "s8q4",
+        "t": "Imagine your local library is offering free resources for students. What do you focus on?",
+        "o": [
+          "Borrowing books or materials related to your career interests.",
+          "Attending workshops or lectures hosted at the library.",
+          "Using quiet study spaces to concentrate better.",
+          "Exploring creative tools or software available in the library’s resources."
+        ]
+      },
+      {
+        "id": "s8q5",
+        "t": "You’re invited to a student exchange program. What excites you most?",
+        "o": [
+          "Experiencing a new culture and expanding your perspective.",
+          "Building a global network of peers and mentors.",
+          "Gaining insights into how different countries approach education.",
+          "Participating in collaborative projects with international students."
+        ]
+      },
+      {
+        "id": "s8q6",
+        "t": "How do you prioritize extracurricular activities?",
+        "o": [
+          "Choose activities that enhance my career prospects.",
+          "Pick hobbies that allow me to explore creativity and relax.",
+          "Focus on leadership roles that develop interpersonal skills.",
+          "Select a mix of academic and non-academic pursuits for balance."
+        ]
+      },
+      {
+        "id": "s8q7",
+        "t": "If financial constraints arise, how do you adjust your plans?",
+        "o": [
+          "Look for scholarships or part-time work opportunities.",
+          "Reassess my goals and find affordable alternatives.",
+          "Seek advice from family or mentors on financial planning.",
+          "Focus on building skills through free or low-cost resources."
+        ]
+      },
+      {
+        "id": "s8q8",
+        "t": "Imagine your community organizes a career fair. How do you prepare?",
+        "o": [
+          "Research the attending companies or colleges in advance.",
+          "Prepare questions to ask representatives about opportunities.",
+          "Work on a strong resume or portfolio to showcase my abilities.",
+          "Focus on networking and making meaningful connections."
+        ]
+      },
+      {
+        "id": "s8q9",
+        "t": "If you were given funding for a personal project, what would you do?",
+        "o": [
+          "Invest in tools or resources to build something innovative.",
+          "Create an initiative that benefits my community.",
+          "Use it for research or a project related to my career goals.",
+          "Organize a workshop or event to share knowledge with others."
+        ]
+      },
+      {
+        "id": "s8q10",
+        "t": "How do you typically discover new opportunities?",
+        "o": [
+          "Through school announcements or career counselors.",
+          "By staying updated with online resources and platforms.",
+          "Through conversations with family, friends, or mentors.",
+          "By actively seeking them out in my community or network."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s9",
+    "title": "Stress Management and Emotional Readiness",
+    "cat": "Emotional Wellness",
+    "qs": [
+      {
+        "id": "s9q1",
+        "t": "You have multiple deadlines in the same week. What’s your approach?",
+        "o": [
+          "Create a detailed schedule and prioritize tasks.",
+          "Take one task at a time and complete them as they come.",
+          "Discuss with peers or mentors to seek advice.",
+          "Focus on managing stress by balancing work with breaks."
+        ]
+      },
+      {
+        "id": "s9q2",
+        "t": "Your teacher gives unexpected feedback on your work. How do you handle it?",
+        "o": [
+          "Reflect on the feedback and plan improvements.",
+          "Discuss with the teacher to understand their perspective.",
+          "Feel anxious but try to implement changes.",
+          "Take time to process it and adjust gradually."
+        ]
+      },
+      {
+        "id": "s9q3",
+        "t": "A big event in your personal life is affecting your studies. What do you do?",
+        "o": [
+          "Share your concerns with someone you trust and seek support.",
+          "Adjust your study routine to accommodate your emotions.",
+          "Focus on work to distract yourself from the situation.",
+          "Take time off to recharge before returning to studies."
+        ]
+      },
+      {
+        "id": "s9q4",
+        "t": "When you’re feeling overwhelmed, how do you relax?",
+        "o": [
+          "Engage in a hobby or activity that makes you happy.",
+          "Spend time with friends or family for support.",
+          "Reflect and meditate to clear your mind.",
+          "Distract yourself with entertainment or social media."
+        ]
+      },
+      {
+        "id": "s9q5",
+        "t": "You’re leading a team project, and things aren’t going as planned. What’s your strategy?",
+        "o": [
+          "Call a meeting to identify and resolve the issues.",
+          "Step back and delegate tasks to others.",
+          "Encourage team members and keep morale high.",
+          "Focus on managing your part of the project effectively."
+        ]
+      },
+      {
+        "id": "s9q6",
+        "t": "Imagine a situation where you’re unsure about your career path. What do you do?",
+        "o": [
+          "Research extensively and gather information.",
+          "Talk to a counselor or mentor for guidance.",
+          "Explore new interests and hobbies to find your path.",
+          "Take time to reflect and follow your instincts."
+        ]
+      },
+      {
+        "id": "s9q7",
+        "t": "You’re feeling homesick in a new environment. What’s your coping mechanism?",
+        "o": [
+          "Stay connected with family through regular calls.",
+          "Build friendships and engage with local activities.",
+          "Focus on your studies or hobbies to stay distracted.",
+          "Write down your feelings and remind yourself of your goals."
+        ]
+      },
+      {
+        "id": "s9q8",
+        "t": "During an exam, you realize you’ve prepared poorly for one section. How do you handle it?",
+        "o": [
+          "Stay calm and focus on maximizing your performance.",
+          "Skip the section temporarily and return later.",
+          "Do your best and accept the outcome.",
+          "Seek help afterward to ensure better preparation next time."
+        ]
+      },
+      {
+        "id": "s9q9",
+        "t": "How do you usually manage stress in high-pressure situations?",
+        "o": [
+          "Break tasks into smaller, manageable steps.",
+          "Focus on the big picture and prioritize important aspects.",
+          "Talk to someone who can help you stay grounded.",
+          "Engage in physical activities or mindfulness practices."
+        ]
+      },
+      {
+        "id": "s9q10",
+        "t": "What’s your go-to strategy for staying motivated during tough times?",
+        "o": [
+          "Set small, achievable goals to maintain momentum.",
+          "Seek inspiration from mentors or role models.",
+          "Reward yourself for small wins to stay positive.",
+          "Reflect on your long-term dreams and keep pushing forward."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s10",
+    "title": "Practical Life Skills and Financial Planning",
+    "cat": "Life Skills",
+    "qs": [
+      {
+        "id": "s10q1",
+        "t": "You receive your monthly stipend, but halfway through the month, you realize you have spent more than planned. What is your immediate reaction?",
+        "o": [
+          "Reassess your spending, cut back on non-essentials, and adjust next month’s budget.",
+          "Borrow money from a friend or family member to cover the rest of the month.",
+          "Avoid thinking about it and continue spending as needed.",
+          "Try to earn extra money through a side gig or part-time work."
+        ]
+      },
+      {
+        "id": "s10q2",
+        "t": "Your friend asks you to join them on an expensive trip, but you have been saving for an important personal goal. How do you respond?",
+        "o": [
+          "Politely decline, explaining that your financial goal is a priority.",
+          "Go on the trip but reduce spending on other expenses.",
+          "Agree to the trip, assuming you will figure out the savings later.",
+          "Ask your family for extra money to cover both the trip and savings."
+        ]
+      },
+      {
+        "id": "s10q3",
+        "t": "You suddenly face an unexpected expense, such as a medical emergency or a laptop breakdown. How do you handle it?",
+        "o": [
+          "Use your emergency savings or budget accordingly.",
+          "Delay dealing with it and hope for the best.",
+          "Borrow money to cover the cost.",
+          "Sell an asset or take up a short-term gig to cover it."
+        ]
+      },
+      {
+        "id": "s10q4",
+        "t": "You find that your monthly food expenses are much higher than expected. What action do you take?",
+        "o": [
+          "Look for cost-saving options, such as meal prepping or eating at home more often.",
+          "Continue spending as you like and adjust your budget elsewhere.",
+          "Avoid tracking expenses and spend as needed.",
+          "Ask someone for financial advice on better money management."
+        ]
+      },
+      {
+        "id": "s10q5",
+        "t": "Your final exams are in two weeks, and you have several assignments pending. However, your friends are planning a movie night. What do you do?",
+        "o": [
+          "Stick to your study plan and postpone the movie night.",
+          "Go for the movie and study later at night.",
+          "Accept the invitation and hope you can manage later.",
+          "Try to negotiate a balance, such as a short study session before the movie."
+        ]
+      },
+      {
+        "id": "s10q6",
+        "t": "You wake up with a long to-do list but feel overwhelmed. How do you handle the situation?",
+        "o": [
+          "Prioritize tasks and break them into smaller, manageable steps.",
+          "Start with easy tasks to build momentum.",
+          "Procrastinate and leave the tasks for later.",
+          "Ask someone else to help or take over some tasks."
+        ]
+      },
+      {
+        "id": "s10q7",
+        "t": "You are working on an important project, but unexpected interruptions (calls, messages, social media) keep distracting you. What is your strategy?",
+        "o": [
+          "Turn off notifications and set a distraction-free workspace.",
+          "Try to multitask between work and distractions.",
+          "Give in to the distractions and push the project to later.",
+          "Work late at night when there are fewer interruptions."
+        ]
+      },
+      {
+        "id": "s10q8",
+        "t": "Your professor extends a deadline by three days. What do you do?",
+        "o": [
+          "Use the extra time wisely to refine and improve your work.",
+          "Relax for the first two days and then rush to complete it.",
+          "Ignore the deadline extension and submit as planned.",
+          "Delay starting until the last minute."
+        ]
+      },
+      {
+        "id": "s10q9",
+        "t": "You move to a new city for college and need to manage daily tasks like laundry, groceries, and bills. What is your approach?",
+        "o": [
+          "Create a routine to handle everything independently.",
+          "Learn through trial and error, making adjustments as needed.",
+          "Rely on friends or roommates for guidance.",
+          "Struggle with managing tasks and call family for help frequently."
+        ]
+      },
+      {
+        "id": "s10q10",
+        "t": "Your mentor gives you two job options: one with a high salary but a repetitive workload, and another with a lower salary but strong learning potential. What do you choose?",
+        "o": [
+          "Take the lower salary for better long-term career growth.",
+          "Choose the higher salary for financial stability.",
+          "Ask for more time to decide.",
+          "Wait and apply for other opportunities."
+        ]
+      },
+      {
+        "id": "s10q11",
+        "t": "You planned to relocate for a job, but at the last moment, the housing arrangements change. What do you do?",
+        "o": [
+          "Stay calm, look for alternative housing, and adapt.",
+          "Stress out but eventually figure out a plan.",
+          "Call your family to fix the situation.",
+          "Give up the job opportunity and return home."
+        ]
+      },
+      {
+        "id": "s10q12",
+        "t": "You are put in charge of a group project, but your team members are uncooperative. How do you proceed?",
+        "o": [
+          "Communicate expectations and delegate tasks effectively.",
+          "Do most of the work yourself to avoid conflicts.",
+          "Complain to the professor or manager about the team.",
+          "Let things unfold naturally without much involvement."
+        ]
+      },
+      {
+        "id": "s10q13",
+        "t": "You receive critical feedback on a project that you worked hard on. How do you react?",
+        "o": [
+          "Take the feedback positively and use it to improve.",
+          "Feel disappointed but accept it as a learning opportunity.",
+          "Get defensive and explain why your work was correct.",
+          "Ignore the feedback and move on."
+        ]
+      },
+      {
+        "id": "s10q14",
+        "t": "Think of a time when you had to adjust to a major life change. How did you handle it?",
+        "type": "textarea"
+      },
+      {
+        "id": "s10q15",
+        "t": "Describe a situation where you had to make a tough financial decision. What did you learn from it?",
+        "type": "textarea"
+      },
+      {
+        "id": "s10q16",
+        "t": "How do you personally stay motivated and disciplined in challenging situations?",
+        "type": "textarea"
+      }
+    ]
+  },
+  {
+    "id": "s11",
+    "title": "Goal-Setting Strategies",
+    "cat": "Life Skills",
+    "qs": [
+      {
+        "id": "s11q1",
+        "t": "Your school announces a scholarship for students with strong academics and extracurricular achievements. You’re interested, but the deadline is three months away. How do you approach this opportunity?",
+        "o": [
+          "Break the requirements into small, manageable tasks and work on them regularly.",
+          "Wait until the last week and then rush to complete the application.",
+          "Assume you won’t qualify and don’t apply.",
+          "Ask a friend to remind you about the deadline and decide later."
+        ]
+      },
+      {
+        "id": "s11q2",
+        "t": "Your friend is always talking about their dream college, but you haven’t thought about where you want to go after high school. How do you respond?",
+        "o": [
+          "Research different career paths and colleges to explore your interests.",
+          "Wait and see what options are available later.",
+          "Ask your parents to choose for you.",
+          "Avoid thinking about it because it feels overwhelming."
+        ]
+      },
+      {
+        "id": "s11q3",
+        "t": "You have an important exam in two months, but your favorite show just released a new season. How do you balance entertainment and studying?",
+        "o": [
+          "Set a study plan first, then allow time to watch the show as a reward.",
+          "Watch the episodes first, then study whenever you feel like it.",
+          "Binge-watch the entire season in one go and study later.",
+          "Stop studying altogether and enjoy the show stress-free."
+        ]
+      },
+      {
+        "id": "s11q4",
+        "t": "You planned to improve your math grades this semester, but after the first test, your score was lower than expected. What’s your next step?",
+        "o": [
+          "Review mistakes, seek help from a teacher, and adjust your study methods.",
+          "Feel discouraged and stop putting effort into math.",
+          "Blame the difficulty of the test and wait for the next one.",
+          "Ignore it and focus on subjects you’re already good at."
+        ]
+      },
+      {
+        "id": "s11q5",
+        "t": "Your school organizes a leadership camp, and you’re interested, but you’re nervous about applying. What do you do?",
+        "o": [
+          "Push yourself out of your comfort zone and apply.",
+          "Wait to see if your friends apply first.",
+          "Decide against applying because you might not get selected.",
+          "Ignore the opportunity because it sounds stressful."
+        ]
+      },
+      {
+        "id": "s11q6",
+        "t": "You set a personal goal to wake up early and exercise before school, but after a week, you keep hitting snooze. What do you do next?",
+        "o": [
+          "Adjust your bedtime and set small milestones to make it easier.",
+          "Give up and stop trying to wake up early.",
+          "Keep setting alarms, hoping it will eventually work.",
+          "Wait for motivation to return before trying again."
+        ]
+      },
+      {
+        "id": "s11q7",
+        "t": "Your teacher suggests using a planner or checklist to keep track of your assignments. How do you respond?",
+        "o": [
+          "Try using one and see if it helps you stay organized.",
+          "Think about it but don’t follow through.",
+          "Ignore the suggestion and rely on memory.",
+          "Assume it’s too much effort and not worth it."
+        ]
+      },
+      {
+        "id": "s11q8",
+        "t": "You and your best friend both set a goal to read 10 books this year, but halfway through, your friend loses interest. What do you do?",
+        "o": [
+          "Continue your goal and encourage your friend to restart.",
+          "Stop reading too since they quit.",
+          "Change your goal to match whatever they are doing now.",
+          "Lose motivation and forget about the goal."
+        ]
+      },
+      {
+        "id": "s11q9",
+        "t": "You start a vision board with all your future goals, but after a few weeks, you stop updating it. What’s your approach?",
+        "o": [
+          "Schedule time each month to review and update your goals.",
+          "Leave it as it is and look at it occasionally.",
+          "Throw it away since you’re not keeping up with it.",
+          "Forget about it and move on."
+        ]
+      },
+      {
+        "id": "s11q10",
+        "t": "Your school counselor asks students to list three personal and three academic goals for the year. How do you react?",
+        "o": [
+          "Thoughtfully write down specific, achievable goals.",
+          "Write something generic just to complete the task.",
+          "Leave the paper blank because you’re unsure.",
+          "Copy a friend’s goals without thinking much about them."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "s12",
+    "title": "Lifelong Learning and Growth Mindset",
+    "cat": "Life Skills",
+    "qs": [
+      {
+        "id": "s12q1",
+        "t": "Your teacher introduces a difficult topic that most students find challenging. What is your response?",
+        "o": [
+          "Stay curious, ask questions, and explore extra resources to understand it.",
+          "Try to memorize the basics without fully understanding.",
+          "Assume it’s too hard and wait for the teacher to explain it again later.",
+          "Give up and stop paying attention to the lesson."
+        ]
+      },
+      {
+        "id": "s12q2",
+        "t": "You sign up for an online coding course, but after the first two lessons, you find it more difficult than expected. What do you do?",
+        "o": [
+          "Break the lessons into smaller parts and practice consistently.",
+          "Skip the hard topics and only focus on the easy ones.",
+          "Drop out of the course and look for something simpler.",
+          "Complain about how difficult coding is and stop trying."
+        ]
+      },
+      {
+        "id": "s12q3",
+        "t": "Your school introduces a new way of learning where students have to do more self-study. How do you react?",
+        "o": [
+          "Embrace the challenge and develop a new study routine.",
+          "Struggle at first but try to adjust slowly.",
+          "Wait and hope that things go back to the old way soon.",
+          "Feel frustrated and stop engaging in lessons."
+        ]
+      },
+      {
+        "id": "s12q4",
+        "t": "Your friend always performs better than you in academics, and it makes you feel discouraged. What do you do?",
+        "o": [
+          "Observe their study methods and try to learn from them.",
+          "Accept that you may never be as good and stop trying too hard.",
+          "Feel jealous and compare yourself negatively.",
+          "Ignore studies altogether because competing feels pointless."
+        ]
+      },
+      {
+        "id": "s12q5",
+        "t": "Your school library introduces a new section with books about space exploration, AI, and psychology. What do you do?",
+        "o": [
+          "Pick up a book and explore a new subject, even if it’s outside your syllabus.",
+          "Stick to books that are directly related to your current subjects.",
+          "Avoid exploring because you think it’s unnecessary.",
+          "Think about checking it out but never actually do it."
+        ]
+      },
+      {
+        "id": "s12q6",
+        "t": "You meet someone who speaks multiple languages and travels the world. This makes you feel…",
+        "o": [
+          "Inspired to learn something new, like a language or a cultural skill.",
+          "Curious but unsure where to start learning.",
+          "Uninterested because it doesn’t affect your current life.",
+          "Intimidated and convinced that learning new skills is too hard."
+        ]
+      },
+      {
+        "id": "s12q7",
+        "t": "You come across a topic online that is completely new to you. What do you do?",
+        "o": [
+          "Look it up, read about it, and try to understand the basics.",
+          "Think it’s interesting but don’t explore it further.",
+          "Ignore it because it’s not related to your studies.",
+          "Feel uninterested and move on."
+        ]
+      },
+      {
+        "id": "s12q8",
+        "t": "Your teacher tells you that curiosity and learning don’t stop after school. What does this mean to you?",
+        "o": [
+          "Learning should be a lifelong habit, not just for exams.",
+          "It’s important but only when necessary for work.",
+          "Learning stops once school is over.",
+          "You only need to learn when required for a job or college application."
+        ]
+      },
+      {
+        "id": "s12q9",
+        "t": "Your school offers a free online course on a topic that interests you but isn’t part of your syllabus. What do you do?",
+        "o": [
+          "Sign up and explore it because learning is valuable.",
+          "Wait to see if your friends join first.",
+          "Ignore it since it won’t affect your grades.",
+          "Assume it will be boring and skip it."
+        ]
+      },
+      {
+        "id": "s12q10",
+        "t": "Your teacher asks students to write a letter to their future selves. How do you approach it?",
+        "o": [
+          "Write meaningful goals and dreams to reflect on later.",
+          "Write something quickly just to complete the task.",
+          "Copy what others are writing.",
+          "Don’t take it seriously and write something random."
+        ]
+      },
+      {
+        "id": "s12q11",
+        "t": "You are given the chance to shadow a professional for a day in your dream career. What do you do?",
+        "o": [
+          "Grab the opportunity and ask as many questions as possible.",
+          "Attend but stay quiet because you feel nervous.",
+          "Avoid it because you don’t think it will be useful now.",
+          "Let someone else take the opportunity instead."
+        ]
+      },
+      {
+        "id": "s12q12",
+        "t": "Your school encourages students to set personal development goals. What is your approach?",
+        "o": [
+          "Set clear personal and academic goals to improve yourself.",
+          "Set goals but don’t really track them.",
+          "Feel uninterested because you don’t see the point.",
+          "Ignore goal-setting because it feels like extra work."
+        ]
+      }
+    ]
+  }
 ];
 
 // ============================
@@ -954,6 +2359,10 @@ let state = {
   currentSection: 0,
   activeToken: null,
   studentInfo: null,
+  basicInfoComplete: false,
+  assessmentStartedAt: null,
+  timerId: null,
+  timeExpired: false,
   submitted: false,
   submitting: false
 };
@@ -1144,12 +2553,140 @@ function renderStudentPanel() {
   document.getElementById("counsellor-panel").style.display = "none";
   document.getElementById("student-panel").style.display = "block";
 
-  const info = state.studentInfo;
-  const initials = info.n.split(" ").map(c=>c[0]).join("").slice(0,2).toUpperCase();
-  document.getElementById("sp-avatar").textContent = initials;
-  document.getElementById("sp-name").textContent = info.n;
+  const info = state.studentInfo || {};
+  document.getElementById("sp-avatar").textContent = "?";
+  document.getElementById("sp-name").textContent = "Student";
+  state.responses = {};
+  state.currentSection = 0;
+  state.basicInfoComplete = false;
+  state.timeExpired = false;
 
+  renderBasicInfoForm();
+}
+
+function renderBasicInfoForm() {
+  const body = document.getElementById("sp-body");
+  updateProgress();
+  body.innerHTML = `
+    <div class="section-card">
+      <div class="section-card-header">
+        <div class="cat-tag">Before You Begin</div>
+        <h3>Student Basic Information</h3>
+      </div>
+      <div class="section-card-body">
+        <p class="basic-info-copy">Please enter your details exactly as you want them recorded. All fields are mandatory before the assessment begins.</p>
+        <div class="basic-info-grid">
+          <div class="field">
+            <label for="student-name-input">Student Name</label>
+            <input id="student-name-input" class="text-inp" type="text" maxlength="100" autocomplete="name" placeholder="Enter student name">
+          </div>
+          <div class="field">
+            <label for="student-grade-input">Grade / Class</label>
+            <input id="student-grade-input" class="text-inp" type="text" maxlength="50" autocomplete="organization-title" placeholder="Enter grade or class">
+          </div>
+          <div class="field">
+            <label for="student-email-input">Student Email</label>
+            <input id="student-email-input" class="text-inp" type="email" maxlength="200" autocomplete="email" placeholder="Enter student email">
+          </div>
+          <div class="field">
+            <label for="student-contact-input">Student Contact Number</label>
+            <input id="student-contact-input" class="text-inp" type="tel" maxlength="20" autocomplete="tel" placeholder="Enter contact number">
+          </div>
+        </div>
+        <button class="btn-submit" onclick="startAssessment()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Start Assessment
+        </button>
+        <p class="required-note">Once you start, you will have 3 hours to complete the assessment. Every question in each section must be answered before moving ahead.</p>
+      </div>
+    </div>`;
+}
+
+window.startAssessment = function() {
+  const name = sanitizeShort(document.getElementById("student-name-input").value);
+  const grade = sanitizeShort(document.getElementById("student-grade-input").value);
+  const email = sanitize(document.getElementById("student-email-input").value);
+  const contact = sanitizeShort(document.getElementById("student-contact-input").value);
+  const fields = [
+    ["student-name-input", name],
+    ["student-grade-input", grade],
+    ["student-email-input", email],
+    ["student-contact-input", contact]
+  ];
+  fields.forEach(([id, val]) => document.getElementById(id).classList.toggle("invalid", !val));
+  document.getElementById("student-email-input").classList.toggle("invalid", !validateEmail(email));
+  if (!name || !grade || !validateEmail(email) || !contact) {
+    showToast("Please complete all student information fields before starting.", "error");
+    return;
+  }
+
+  state.studentInfo = { ...state.studentInfo, n: name, g: grade, e: email, c: contact };
+  state.basicInfoComplete = true;
+  state.responses = {};
+  state.currentSection = 0;
+  state.assessmentStartedAt = Date.now();
+  try { sessionStorage.setItem("ta_start_" + state.studentInfo.id, String(state.assessmentStartedAt)); } catch {}
+
+  const initials = name.split(" ").map(c=>c[0]).join("").slice(0,2).toUpperCase();
+  document.getElementById("sp-avatar").textContent = initials || "S";
+  document.getElementById("sp-name").textContent = name;
+  startTimer();
   renderSection();
+};
+
+function formatTime(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = String(Math.floor(total / 3600)).padStart(2, "0");
+  const m = String(Math.floor((total % 3600) / 60)).padStart(2, "0");
+  const s = String(total % 60).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+}
+
+function getTimeRemaining() {
+  if (!state.assessmentStartedAt) return ASSESSMENT_TIME_LIMIT_MS;
+  return ASSESSMENT_TIME_LIMIT_MS - (Date.now() - state.assessmentStartedAt);
+}
+
+function startTimer() {
+  if (state.timerId) clearInterval(state.timerId);
+  updateTimer();
+  state.timerId = setInterval(updateTimer, 1000);
+}
+
+function updateTimer() {
+  const left = getTimeRemaining();
+  const pct = Math.max(0, Math.min(100, left / ASSESSMENT_TIME_LIMIT_MS * 100));
+  const label = document.getElementById("sp-time-left");
+  const fill = document.getElementById("sp-time-fill");
+  const wrap = document.getElementById("sp-timer-wrap");
+  if (label) label.textContent = formatTime(left);
+  if (fill) fill.style.width = pct + "%";
+  if (wrap) wrap.classList.toggle("warning", left <= 15 * 60 * 1000);
+  if (left <= 0 && !state.timeExpired) expireAssessment();
+}
+
+function expireAssessment() {
+  state.timeExpired = true;
+  if (state.timerId) clearInterval(state.timerId);
+  document.getElementById("sp-body").innerHTML = `<div class="success-screen">
+    <div class="success-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#e8b84b" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+    <h2>Time Is Over</h2>
+    <p>The 3-hour assessment window has ended. Please contact your counsellor if you need a new assessment link.</p>
+  </div>`;
+}
+
+function totalQ() { return SECTIONS.reduce((a,s)=>a+s.qs.length,0); }
+function isAnswered(q) {
+  const value = state.responses[q.id];
+  return value !== undefined && String(value).trim() !== "";
+}
+function answeredQ() { return SECTIONS.reduce((a,s)=>a+s.qs.filter(isAnswered).length,0); }
+function secAnswered(idx) { return SECTIONS[idx].qs.filter(isAnswered).length; }
+function isSectionComplete(idx) { return secAnswered(idx) === SECTIONS[idx].qs.length; }
+function firstIncompleteInSection(idx) { return SECTIONS[idx].qs.find(q => !isAnswered(q)); }
+function canAccessSection(idx) {
+  for (let i = 0; i < idx; i++) if (!isSectionComplete(i)) return false;
+  return true;
 }
 
 function updateProgress() {
@@ -1158,14 +2695,28 @@ function updateProgress() {
   document.getElementById("sp-fill").style.width = pct+"%";
 }
 
+function requireSectionComplete(idx) {
+  const missing = firstIncompleteInSection(idx);
+  if (!missing) return true;
+  const block = document.getElementById("qb-" + missing.id);
+  if (block) {
+    block.scrollIntoView({ behavior: "smooth", block: "center" });
+    const input = block.querySelector("input, textarea");
+    if (input) input.classList.add("invalid");
+  }
+  showToast("Please answer all questions in this section before continuing.", "error");
+  return false;
+}
+
 function renderSection() {
+  if (state.timeExpired) return;
   updateProgress();
+  updateTimer();
   const s = SECTIONS[state.currentSection];
   const body = document.getElementById("sp-body");
 
-  // Section tabs
   const tabsHtml = SECTIONS.map((sec,idx)=>{
-    const done = secAnswered(idx)===sec.qs.length;
+    const done = isSectionComplete(idx);
     const active = state.currentSection===idx;
     let cls = "sec-tab";
     if(active) cls+=" active"; else if(done) cls+=" done";
@@ -1174,19 +2725,20 @@ function renderSection() {
 
   const qHtml = s.qs.map((q,qi)=>{
     const ans = state.responses[q.id];
-    const isLast = qi===s.qs.length-1;
     let inputHtml;
     if(q.type==="date"){
-      inputHtml=`<input class="text-inp" type="date" value="${ans||""}" onchange="setAns('${q.id}',this.value)" style="max-width:200px">`;
+      inputHtml=`<input class="text-inp" type="date" value="${escAttr(ans||"")}" onchange="setAns('${q.id}',this.value)" style="max-width:200px">`;
     } else if(q.type==="time"){
-      inputHtml=`<input class="text-inp" type="time" value="${ans||""}" onchange="setAns('${q.id}',this.value)" style="max-width:160px">`;
+      inputHtml=`<input class="text-inp" type="time" value="${escAttr(ans||"")}" onchange="setAns('${q.id}',this.value)" style="max-width:160px">`;
+    } else if(q.type==="textarea"){
+      inputHtml=`<textarea class="text-inp" placeholder="Type your answer" oninput="setAns('${q.id}',this.value)" maxlength="1200" rows="4">${escHtml(ans||"")}</textarea>`;
     } else if(q.type==="text"){
-      inputHtml=`<input class="text-inp" type="text" placeholder="Type your answer…" value="${ans||""}" oninput="setAns('${q.id}',this.value)" maxlength="200">`;
+      inputHtml=`<input class="text-inp" type="text" placeholder="Type your answer" value="${escAttr(ans||"")}" oninput="setAns('${q.id}',this.value)" maxlength="300">`;
     } else {
-      inputHtml=`<div class="options-list">${q.o.map((opt,oi)=>{
+      inputHtml=`<div class="options-list">${q.o.map((opt)=>{
         const sel = ans===opt;
         return `<label class="opt-label${sel?" selected":""}" onclick="selectOpt('${q.id}','${escAttr(opt)}')">
-          <input type="radio" name="${q.id}" ${sel?"checked":""} style="pointer-events:none">
+          <input type="radio" name="${q.id}" value="${escAttr(opt)}" ${sel?"checked":""} style="pointer-events:none">
           <span>${escHtml(opt)}</span>
         </label>`;
       }).join("")}</div>`;
@@ -1204,7 +2756,7 @@ function renderSection() {
   const nextBtn = isLast
     ? `<button class="btn-submit" onclick="submitAssessment()" ${state.submitting?"disabled":""}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        ${state.submitting?"Submitting…":"Submit Assessment"}
+        ${state.submitting?"Submitting?":"Submit Assessment"}
       </button>`
     : `<button class="btn-nav" onclick="nextSec()">
         Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1223,7 +2775,7 @@ function renderSection() {
       <div class="section-card-body">${qHtml}</div>
       <div class="section-nav">
         ${prevBtn}
-        <span style="font-size:13px;color:var(--text-muted)">${answered}/${total} answered · Section ${state.currentSection+1}/${SECTIONS.length}</span>
+        <span style="font-size:13px;color:var(--text-muted)">${answered}/${total} answered ? Section ${state.currentSection+1}/${SECTIONS.length}</span>
         ${nextBtn}
       </div>
     </div>`;
@@ -1231,13 +2783,26 @@ function renderSection() {
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
-window.goSection = function(i){state.currentSection=i;renderSection()};
+window.goSection = function(i){
+  if (state.timeExpired) return;
+  if (!canAccessSection(i)) { showToast("Complete the previous sections before opening this section.", "error"); return; }
+  state.currentSection=i;renderSection();
+};
 window.prevSec = function(){if(state.currentSection>0){state.currentSection--;renderSection()}};
-window.nextSec = function(){if(state.currentSection<SECTIONS.length-1){state.currentSection++;renderSection()}};
-window.setAns = function(qid,val){state.responses[qid]=sanitize(val);updateProgress()};
+window.nextSec = function(){
+  if (state.timeExpired) return;
+  if (!requireSectionComplete(state.currentSection)) return;
+  if(state.currentSection<SECTIONS.length-1){state.currentSection++;renderSection()}
+};
+window.setAns = function(qid,val){
+  const cleanVal = sanitize(val);
+  if (cleanVal) state.responses[qid]=cleanVal; else delete state.responses[qid];
+  const input = document.querySelector(`#qb-${qid} input, #qb-${qid} textarea`);
+  if (input) input.classList.toggle("invalid", !cleanVal);
+  updateProgress();
+};
 window.selectOpt = function(qid,val){
   state.responses[qid]=val;
-  // Update DOM without full re-render
   document.querySelectorAll(`[name="${qid}"]`).forEach(r=>{
     const lbl=r.closest(".opt-label");
     const isSelected=r.value===val||lbl.querySelector("span").textContent===val;
@@ -1247,15 +2812,25 @@ window.selectOpt = function(qid,val){
   updateProgress();
 };
 
-function escAttr(s){return String(s).replace(/'/g,"&apos;").replace(/"/g,"&quot;")}
+function escAttr(s){return String(s).replace(/&/g,"&amp;").replace(/'/g,"&#39;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 
 window.submitAssessment = async function() {
-  if(state.submitting) return;
+  if(state.submitting || state.timeExpired) return;
+  if (!requireSectionComplete(state.currentSection)) return;
+  if (answeredQ() !== totalQ()) {
+    const firstSection = SECTIONS.findIndex((_, idx) => !isSectionComplete(idx));
+    if (firstSection >= 0) state.currentSection = firstSection;
+    renderSection();
+    showToast("Please answer every question before submitting.", "error");
+    return;
+  }
+
   state.submitting=true;
+  if (state.timerId) clearInterval(state.timerId);
 
   const body = document.getElementById("sp-body");
   body.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
-    <div style="font-size:14px;margin-bottom:8px">Securely submitting your assessment…</div>
+    <div style="font-size:14px;margin-bottom:8px">Securely submitting your assessment?</div>
     <div style="font-size:12px">Please do not close this window.</div>
   </div>`;
 
@@ -1263,22 +2838,30 @@ window.submitAssessment = async function() {
     studentName: state.studentInfo.n,
     grade: state.studentInfo.g,
     email: state.studentInfo.e,
+    contactNumber: state.studentInfo.c,
     tokenId: state.studentInfo.id,
     submittedAt: new Date().toLocaleString(),
+    startedAt: state.assessmentStartedAt ? new Date(state.assessmentStartedAt).toLocaleString() : "",
     totalAnswered: answeredQ(),
     totalQuestions: totalQ(),
-    responses: Object.entries(state.responses).map(([qid,ans])=>{
-      const sec = SECTIONS.find(s=>s.qs.find(q=>q.id===qid));
-      const q = sec ? sec.qs.find(q=>q.id===qid) : null;
-      return {section:sec?sec.title:"",question:q?q.t:"",answer:ans};
-    })
+    responses: SECTIONS.flatMap(sec => sec.qs.map(q => ({
+      section: sec.title,
+      question: q.t,
+      answer: state.responses[q.id] || ""
+    })))
   };
 
-  // Mark as completed in local store
   const updated = state.links.map(l=>l.id===state.studentInfo.id?{...l,status:"completed",completedAt:new Date().toLocaleString()}:l);
   state.links=updated; saveLinks();
 
-  await syncSheet("SUBMIT", payload);
+  const result = await syncSheet("SUBMIT", payload);
+  if (!result || !result.ok) {
+    state.submitting=false;
+    startTimer();
+    renderSection();
+    showToast("Submission could not be completed. Please check your connection and try again.", "error");
+    return;
+  }
   state.submitted=true;
   state.submitting=false;
 
@@ -1288,7 +2871,7 @@ window.submitAssessment = async function() {
     </div>
     <h2>Assessment Complete</h2>
     <p>Thank you, ${escHtml(state.studentInfo.n)}. Your responses have been securely recorded and submitted.</p>
-    <p style="margin-top:16px;font-size:13px">A detailed Thryve Aspire report will be prepared and shared with your counsellor.</p>
+    <p style="margin-top:16px;font-size:13px">A confirmation email has been sent to ${escHtml(state.studentInfo.e)}.</p>
   </div>`;
 };
 
@@ -1300,7 +2883,7 @@ window.submitAssessment = async function() {
 // ============================
 async function syncSheet(action, data) {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("YOUR_DEPLOYMENT_ID")) {
-    console.warn("Thryve: APPS_SCRIPT_URL not configured — skipping sync");
+    console.warn("Thryve: APPS_SCRIPT_URL not configured ? skipping sync");
     return { ok: false, reason: "not_configured" };
   }
   try {
@@ -1309,12 +2892,19 @@ async function syncSheet(action, data) {
     const auth    = await makeRequestAuth(action, tokenId, ts);
     const payload = JSON.stringify({ action, ...data, _auth: auth, _ts: ts });
 
-    // Use text/plain to avoid CORS preflight — Apps Script reads e.postData.contents
+    // Local file pages cannot always read Apps Script responses because of CORS.
+    // no-cors still sends the data to Apps Script and returns an opaque response.
     const res = await fetch(APPS_SCRIPT_URL, {
-      method:  "POST",
-      headers: { "Content-Type": "text/plain" },
-      body:    payload
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: payload,
+      keepalive: action === "LINK_OPENED"
     });
+
+    if (res.type === "opaque" || res.status === 0) {
+      return { ok: true, opaque: true };
+    }
     if (!res.ok) {
       console.error("Thryve syncSheet HTTP error:", res.status, res.statusText);
       return { ok: false, status: res.status };
@@ -1345,7 +2935,7 @@ window.testConnection = async function() {
   btn.disabled  = false;
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg> Test connection`;
   if (result && result.ok) {
-    out.textContent = "Connected! Sheet is receiving data.";
+    out.textContent = result.opaque ? "Request sent. Check the Sheet for the test entry." : "Connected! Sheet is receiving data.";
     out.style.color = "#4caf50";
   } else {
     const reason = result ? (result.error || result.reason || result.status || "unknown error") : "no response";
@@ -1422,13 +3012,13 @@ async function boot() {
     return;
   }
 
-  // Mark as used
-  const updated = state.links.map(l=>l.id===info.id?{...l,status:"used",openedAt:new Date().toLocaleString()}:l);
+  // Mark as used locally and show the student form immediately.
+  const openedAt = new Date().toLocaleString();
+  const updated = state.links.map(l=>l.id===info.id?{...l,status:"used",openedAt}:l);
   state.links=updated; saveLinks();
-  await syncSheet("LINK_OPENED",{tokenId:info.id,openedAt:new Date().toLocaleString()});
-
   state.studentInfo = info;
   renderStudentPanel();
+  syncSheet("LINK_OPENED",{tokenId:info.id,openedAt});
 }
 
 boot();
